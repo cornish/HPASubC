@@ -128,15 +128,15 @@ def main(indir,outfile):
 				#axis: X = 0
 				value = int(round(e.dict['value']))
 				if e.dict['axis'] == 0:
-					if value > 0 and i < numImage-1:
+					if value > 0 and i < numImages-1:
 						fullImage,i = nextImage(images,i)
 					elif value < 0 and i > 0:
 						fullImage,i = prevImage(images,i)
 				#axis: Y = 1
 				if e.dict['axis'] == 1:
-					if value > 0:
+					if value < 0:
 						scale = scale * 1.5
-					elif value < 0 and i > 0:
+					elif value > 0:
 						scale = scale / 1.5
 				print i
 				
