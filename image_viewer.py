@@ -57,9 +57,11 @@ exitKey = pygame.K_ESCAPE
 zoomInKey = pygame.K_MINUS
 zoomOutKey = pygame.K_EQUALS
 
-# BUTTON_BINDINGS (joy/pad left and right are next and prev, respectively)
+# BUTTON_BINDINGS
+# joy/pad left and right are next and prev, respectively
+# joy/pad up and down are zoom in and out, respectively
 selectButton = 2
-zoomInButton = 1
+zoomInButton = 3
 zoomOutButton = 1
 
 # GLOBALS
@@ -111,7 +113,7 @@ def main(indir,outfile):
 					
 			if e.type == pygame.JOYBUTTONDOWN:
 				print("Joystick button % s pressed." % e.dict['button'])
-				if e.dict['button'] == selectButton and i < numFiles-1: #save and advance
+				if e.dict['button'] == selectButton and i < numImages-1: #save and advance
 					selectImage(outfile,images,i)
 					animateText(fullImage,title,scale,'Selected')
 					fullImage,i = nextImage(images,i)
@@ -121,15 +123,21 @@ def main(indir,outfile):
 					scale = scale / 1.5
 
 			if e.type == pygame.JOYAXISMOTION:
-				#axis: X = 0
 				print("Joystick axis %s" % e.dict['axis'])
 				print("Joystick value %s" % e.dict['value'])
+				#axis: X = 0
 				value = int(round(e.dict['value']))
 				if e.dict['axis'] == 0:
-					if value > 0 and i < numFiles-1:
+					if value > 0 and i < numImage-1:
 						fullImage,i = nextImage(images,i)
 					elif value < 0 and i > 0:
 						fullImage,i = prevImage(images,i)
+				#axis: Y = 1
+				if e.dict['axis'] == 1:
+					if value > 0:
+						scale = scale * 1.5
+					elif value < 0 and i > 0:
+						scale = scale / 1.5
 				print i
 				
 		showImage(fullImage,'%s of %s : %s : %.2f%%' % (i+1,numImages,images[i]['image_file'],scale*100),scale)
@@ -187,7 +195,7 @@ def animateText(fullImage,title,scale,animateString):
 def writeResult(outfile,images,i):
 	with open(outfile,'a+b') as f: 
 		#open with a+ mode, read at beginning, write at the end
-		fieldnames = ['image_file','ensg_id','tissue','antibody','image_url']		
+		fieldnames = ['image_file','ensg_id','tissue','antibody','image_url']	
 		writer = csv.DictWriter(f, dialect='excel',fieldnames=fieldnames,extrasaction='ignore')
 		lineCount = 0
 		for lineCount,l in enumerate(f):
