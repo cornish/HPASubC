@@ -2,11 +2,20 @@
 
 """image_scorer.py: uses pygame to view jpg images in a folder, and associate a score with the image.  The image path to a selected image adn the score are recorded in a row in the output csv file.
 
+The HPA image download script in this suite embeds metadata (ensg_id, antibody, etc.) as json in the image file's Exif.UserComment tag. This script uses that Exif data to populate the corresponding columns in the output_file.  If the metadata is not in the image, those columns will be blank.
+
 Default key bindings are: LEFT ARROW goes to previous image. RIGHT ARROW goes to next image. SPACE BAR selects. The MINUS key zooms out.  The EQUALS (unshifted plus) key zooms in. The ESCAPE key exits and closes the window. SPACE and 0 are defined as '0', and '1','2','3','4', and '5' are the scores 1 to 5, respectively. The keys can be remapped in this file under KEY_BINDINGS. The script supports arbitrary key bindings defined in the scoreKeys dict. For example, arbitrary strings such as 'cancer' or 'normal' could also be bound to keys instead of numeric scores. 
 
 A complete list of all pygame key events can be found at ttp://www.pygame.org/docs/ref/key.html 
 
-The output file is a CSV file (with header) listing the file path for the selected images and the score assigned. The file is appended as each image as scored.
+The output file is a CSV file (with header) listing the file path for the selected images and the score assigned. The file is appended as each image as scored. Columns are:
+
+  image_file: the name of the image file downloaded
+  ensg_id: the Ensembl gene id 
+  tissue: the tissue represented in the image
+  antibody: the id of the antibody in the image
+  score: the user-assigned score
+  image_url: the HPA url the image was downloaded from
 
 The score will be displayed in an animation, this can be shut off by setting animate to False
 
@@ -19,6 +28,7 @@ usage: image_scorer.py <input dir> <output file>
 # 08-29-2013 TC clean up and standardize code
 # 07-11-2014 TC additional code clean up and documentation
 # 07-24-2014 TC refactor code
+# 08-05-2014 TC added exif metadata reading and handling
 
 __author__ = "Marc Halushka, Toby Cornish"
 __copyright__ = "Copyright 2014, Johns Hopkins University"
@@ -30,9 +40,11 @@ __email__ = "tcornis3@jhmi.edu"
 
 import os
 import sys
-import pygame
 import math
 import csv
+import json
+import pygame
+import pyexiv2
 
 # KEY_BINDINGS
 nextKey = pygame.K_RIGHT
@@ -67,14 +79,16 @@ def main(indir,outfile):
 		print 'No image files found in input directory.'
 		sys.exit()
 	
+	images = readAllImageMetadata(files)
+	
 	#initialize variables
 	scale = defaultScale
 	i = 0
 	screen = reset_screen((200,200)) #to initialize the pygame screen
-	fullImage = pygame.image.load(files[i]).convert()
+	fullImage = pygame.image.load(images[i]['image_path']).convert()
 	
 	while True: #pygame loop
-		title = '%s of %s : %s : %.2f%%' % (i+1,numImages,files[i],scale*100)
+		title = '%s of %s : %s : %.2f%%' % (i+1,numImages,images[i]['image_file'],scale*100)
 		font = pygame.font.Font(None, 36)
 		for e in pygame.event.get() :
 			if e.type == pygame.QUIT :
@@ -91,8 +105,8 @@ def main(indir,outfile):
 					print score
 					screen = pygame.display.get_surface()
 					animateText(fullImage,title,scale,score)
-					writeResult(outfile,[files[i],score])
-					fullImage,i = nextImage(files,i)
+					writeResult(outfile,images,i,score)
+					fullImage,i = nextImage(images,i)
 
 		showImage(fullImage,title,scale)
 		pygame.display.flip()
@@ -142,32 +156,33 @@ def animateText(fullImage,title,scale,animateString):
 			pygame.display.flip()
 			pygame.time.delay(1)
 	
-def writeResult(outfile,result):
+def writeResult(outfile,images,i,score):
+	images[i]['score'] = score
 	with open(outfile,'a+b') as f: 
 		#open with a+ mode, read at beginning, write at the end
-		fieldnames = ['Image','score']
-		writer = csv.writer(f, dialect='excel')
+		fieldnames = ['image_file','ensg_id','tissue','antibody','score','image_url']
+		writer = csv.DictWriter(f, dialect='excel',fieldnames=fieldnames,extrasaction='ignore')
 		lineCount = 0
 		for lineCount,l in enumerate(f):
 			pass
 		if lineCount == 0: #if the file length is zero lines, write the header
-			writer.writerow(fieldnames)
-		writer.writerow(result) 
+			writer.writerow(dict((fn,fn) for fn in fieldnames))
+		writer.writerow(images[i]) 
 		
-def nextImage(files,i):
-	print 'nextImage   -> %s' % files[i]
+def nextImage(images,i):
+	print 'nextImage   -> %s' % images[i]['image_file']
 	i += 1
-	if i > len(files) - 1: 
-		i = len(files) - 1
-	fullImage = pygame.image.load(files[i]).convert()
+	if i > len(images) - 1: 
+		i = len(images) - 1
+	fullImage = pygame.image.load(images[i]['image_path']).convert()
 	return fullImage,i
 	
-def prevImage(files,i):
-	print 'prevImage   -> %s' % files[i]
+def prevImage(images,i):
+	print 'prevImage   -> %s' % images[i]['image_file']
 	i -= 1
 	if i < 0: 
 		i = 0
-	fullImage = pygame.image.load(files[i]).convert()
+	fullImage = pygame.image.load(images[i]['image_path']).convert()
 	return fullImage,i
 			
 def scaleTuple(tup,scale):
@@ -186,6 +201,37 @@ def getImageFiles(dir,exts):
 			files.append(os.path.join(dir,file))
 	return files
 	
+def readAllImageMetadata(files):
+	images = []
+	print 'Reading image file metadata...'
+	for filePath in files:
+		image = readExifUserComment(filePath)
+		print image
+		image['image_path'] = filePath
+		image['score'] = ''
+		images.append(image)
+	print '  done.'
+	return images
+		
+def readExifUserComment(imagePath):
+	# read in the exif data, convert the user comment from json to dict, return it
+	# use empty values if the data isn't found
+	userComment = {	'ensg_id' : '',
+									'tissue' : '',
+									'protein_url' : '',
+									'image_url' : '',
+									'antibody' : '',
+									'image_file' : '',
+								}
+	try:
+		metadata = pyexiv2.ImageMetadata(imagePath)
+		metadata.read()
+		userComment = json.loads(metadata['Exif.Photo.UserComment'].value)
+	except Exception, e:
+		# the tag or exif isn't there, return the empty one
+		print e
+		pass
+	return userComment
 	
 if __name__ == '__main__':
 	if len(sys.argv) != 3:
