@@ -27,7 +27,7 @@ Please visit the respective websites to install the above dependencies.  HPASubC
 
 download_images_from_gene_list.py
 --------------
-usage: `download_images_from_gene_list.py* **input_file** **output_file** **tissue** **output_dir**`
+usage: `download_images_from_gene_list.py input_file output_file tissue output_dir`
 
 For a list of gene ids and a tissue type, this script will parse the HPA results, extract all image URLs, and output a list of .jpg image urls.  This file requires a .txt input file of ENSG IDs and outputs a .csv file. HPA ENSG IDs can be obtained here: http://www.proteinatlas.org/about/download.
 
@@ -55,7 +55,7 @@ ENSG00000000419
 
 image_viewer.py
 --------------
-usage: `image_viewer.py **input_dir** **output_file**`
+usage: `image_viewer.py input_dir output_file`
 
 This script will open all of the image files within a folder and allow them to be quickly scanned for any staining pattern of interest.  Any image file that can be opened by PyGame can be used, but the extension will need to be added to the imageExtensions list to be recognized. By default, only JPEGs are recognized. Either the keyboard or a PyGame-compatible USB gamepad/joystick can be used (finally, a legitimate reason to have a video game controller on your desk at work).  
 
@@ -85,7 +85,7 @@ The score will be displayed in an animation, this can be shut off by setting ani
 
 image_scorer.py
 --------------
-usage: `image_scorer.py **input_dir** **output_file**`
+usage: `image_scorer.py input_dir output_file`
 
 This script allows one to assign a score or other arbitrary value to each image in a directory.  It supports arbitrary key bindings defined in the scoreKeys dict.  By default, SPACE and 0 are defined as '0', and '1','2','3','4', and '5' are the scores 1 to 5, respectively. Arbitrary strings such as 'cancer' or 'normal' could also be bound to keys. 
 
@@ -110,7 +110,7 @@ We generally put 3,000 images in one folder and scan them in these smaller block
 
 download_protein_data_from_gene_list.py
 --------------
-usage: `download_protein_data_from_gene_list.py **input_file** **output_file**`
+usage: `download_protein_data_from_gene_list.py input_file output_file`
 
 Given a file listing Ensembl gene ids, this script returns a CSV file with the following protein and gene data from HPA.
 
