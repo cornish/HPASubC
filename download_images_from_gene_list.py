@@ -3,7 +3,7 @@
 """download_images_from_gene_list.py: given a file of Ensembl gene ids, a valid tissue, and an output directory will download the full size images for that gene id, and create a CSV file with columns containing the following data from HPA:
 
   image_file: the name of the image file downloaded
-  ensg_id: the Ensembl gene id 
+  ensg_id: the Ensembl gene id
   tissue: the tissue represented in the image
   antibody: the id of the antibody in the image
   protein_url: the HPA url for the ensg_id
@@ -17,7 +17,7 @@ usage: download_images_from_gene_list.py <input_file> <output_file> <tissue> <ou
 """
 
 # CHANGE LOG:
-# 06-18-2013 MK initial build         
+# 06-18-2013 MK initial build
 # 08-29-2013 TC clean up and standardize code
 # 07-11-2014 TC additional code clean up and documentation
 # 07-13-2014 TC fix to accomodate new HPA website html
@@ -37,18 +37,29 @@ import csv
 import sys
 import os
 import re
-import traceback 
+import traceback
 import json
 import pyexiv2
 from bs4 import BeautifulSoup
 
+cancers = 	['colorectal cancer','breast cancer','prostate cancer',
+						'ovarian cancer','cervical cancer','endometrial cancer',
+						'carcinoid','head and neck cancer','thyroid cancer',
+						'glioma','lymphoma','lung cancer','melanoma',
+						'skin cancer','testis cancer','urothelial cancer',
+						'renal cancer','stomach cancer','pancreatic cancer',
+						'liver cancer']
+
 def main(infile,outfile,tissue,outdir):
 	try:
 		with open(infile, "r") as f: # Input file here
-			results = [] 
+			results = []
 			for gene in f.readlines():
 				gene = gene.strip()
-				url = 'http://www.proteinatlas.org/%s/normal/%s' % (gene, urllib.quote(tissue))
+				if tissue.lower() in cancers: #the cancers need a different url
+					url = 'http://www.proteinatlas.org/%s/cancer/tissue/%s' % (gene, urllib.quote(tissue))
+				else:
+					url = 'http://www.proteinatlas.org/%s/tissue/%s' % (gene, urllib.quote(tissue))
 				# retrieve the html page from HPA and parse it
 				soup = BeautifulSoup(urllib.urlopen(url).read())
 				# first check to see if the tissue is not found
@@ -57,12 +68,13 @@ def main(infile,outfile,tissue,outdir):
 					links = soup.findAll('a') #find all the links in the page
 					for link in links:
 						if link.get('name') is not None: # ignore links that do not have names
-							if re.match('_image\d*',link.get('name')) is not None: 
+							if re.match('_image\d*',link.get('name')) is not None:
 								# all the image links are named '_imageN', ignore if no match
 								image = link.img # get the img displayed for this link
 								imageUrl = 'http://www.proteinatlas.org' + image.get('src')
 								print gene,imageUrl
 								imageUrl = imageUrl.replace('_medium','') # get the full resolution images
+								imageUrl = imageUrl.replace('_thumb','') # get the full resolution images
 								antibodyPlusImage = imageUrl.replace('http://www.proteinatlas.org/images/','')
 								antibody,imageFile = antibodyPlusImage.split('/')
 								result = {}
@@ -90,7 +102,7 @@ def main(infile,outfile,tissue,outdir):
 				imagePath = os.path.join(outdir,result['image_file'])
 				# add the exif data to it
 				writeExifUserComment(imagePath,result)
-		
+
 		print "Complete."
 
 	except Exception,e: # catch any errors & pass on the message
@@ -108,7 +120,7 @@ def downloadImage(imageUrl,image_name,outdir):
 	except Exception,e: # catch any errors & pass on the message
 		print 'Caught Exception: %s' % str(e)
 		print traceback.format_exc()
-		
+
 def writeExifUserComment(imagePath,userCommentAsDict):
 	# read in the exif data, add the user comment as json, and write it
 	metadata = pyexiv2.ImageMetadata(imagePath)
@@ -134,11 +146,11 @@ if __name__ == '__main__':
 		outFile = sys.argv[2]
 		tissue = sys.argv[3]
 		outDir = sys.argv[4]
-		
+
 		if not os.path.isfile(inFile):
 			print 'The input file %s does not exist.' % inFile
 			sys.exit()
-			
+
 		try:
 			if not os.path.exists(outDir):
 				# make the directory if it doesn't exist
@@ -147,10 +159,10 @@ if __name__ == '__main__':
 			print e
 			print 'Error creating directory %s' % outDir
 			sys.exit()
-		
+
 		if not fileIsWriteable(outFile):
 			print 'The output file %s is not writeable -- is it open?' % outFile
 			sys.exit()
-			
+
 		main(inFile,outFile,tissue,outDir)
 
