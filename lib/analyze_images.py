@@ -47,11 +47,13 @@ print "%s" % scale
 gd = GenericDialog('Settings')
 gd.addNumericField('Scale:', scale, 3)
 gd.addNumericField('Unscaled smooth radius (px):', smoothRadius, 3)
+gd.addCheckbox('Create overlay images:',True)
 gd.showDialog()
 if gd.wasCanceled():
 	print 'No scale entered. Exiting.'
 	sys.exit()
 scale = float(gd.getNextNumber())
+createOverlays = gd.getNextBoolean()
 
 smoothRadius = int(round(smoothRadius*scale))
 outFileName = "results_%s.csv" % getTimeStamp()
@@ -118,10 +120,11 @@ for imagePath in imageFileList:
 	IJ.run(rgb,'Draw','')
 	IJ.run(rgb, "Select All", "")
 
-	# save annotation
-	annotationPath = os.path.join(outputDir,'%s_overlay.jpg' % basename)
-	print "  Saving overlay: %s ..." % annotationPath
-	IJ.saveAs(rgb, "Jpeg", annotationPath)
+	# save annotation if createOverlays
+	if createOverlays:
+		annotationPath = os.path.join(outputDir,'%s_overlay.jpg' % basename)
+		print "  Saving overlay: %s ..." % annotationPath
+		IJ.saveAs(rgb, "Jpeg", annotationPath)
 
 	#clean up
 	grayImp.close()
@@ -133,6 +136,8 @@ for imagePath in imageFileList:
 	rt.addValue("dir",inputDir)
 	rt.addValue("fileName",title)
 	rt.addValue("path",os.path.join(os.path.abspath(inputDir),title))
+	if createOverlays:
+		rt.addValue("overlayPath",os.path.abspath(annotationPath))
 	rt.addValue("scale",scale)
 	rt.addValue("tissueAreaPx",tissueAreaPx)
 	rt.addValue("mean",mean)
