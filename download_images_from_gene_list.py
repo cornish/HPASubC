@@ -155,9 +155,12 @@ def log(logFile,type,message):
 		f.write('%s %s  %s\n' % (timestamp,type,message) )
 
 def fileIsWriteable(filePath):
+	exists = os.path.exists(filePath)
 	try:
 		f = open(filePath , 'ab')
 		f.close()
+		if not exists:
+			os.remove(filePath)
 		return True
 	except Exception,e:
 		print e
@@ -246,7 +249,7 @@ if __name__ == '__main__':
 				if resume:
 					skip = readProgress(outFile)
 				else:
-					append = query_yes_no('Append the file (or else quit)?',default="yes")
+					append = query_yes_no('Append the file (or n to quit)?',default="yes")
 					if not append:
 						print 'ok. exiting...'
 						sys.exit()
