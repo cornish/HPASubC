@@ -4,10 +4,20 @@
 
 	image_file: the name of the image file downloaded
 	ensg_id: the Ensembl gene id
-	tissue: the tissue represented in the image
+	tissue_or_cancer: the tissue_or_cancer represented in the image
 	antibody: the id of the antibody in the image
 	protein_url: the HPA url for the ensg_id
 	image_url: the HPA url the image was downloaded from
+
+For cancers, the ouput file contains these additional fields:
+	demographic: sex and age of patient
+	tissue: tissue source with Snomed code
+	diagnoses: |-separated list of diagnoses with Snomed code
+	patient_id: hpa patient id
+	staining: is staining present?
+	intensity: staining intensity
+	quantity: staining quantity
+	location: staining location
 
 Known tissue (and cancer) types are listed in the APPENDICES of the README file
 
@@ -59,7 +69,7 @@ def main(infile,outfile,tissue,outdir,create,skip):
 	isCancer = tissue.lower() in cancers #the cancers have different web pages and urls
 
 	with open(outfile, "ab") as f: #create or append .csv output file to write to here
-		fieldnames = ['image_file','ensg_id','tissue','antibody','protein_url','image_url']
+		fieldnames = ['image_file','ensg_id','tissue_or_cancer','antibody','protein_url','image_url']
 		if isCancer:
 			fieldnames.extend(['demographic','tissue','diagnosis','patient_id','staining','intensity','quantity','location'])
 		writer = csv.DictWriter(f, dialect='excel',fieldnames=fieldnames)
@@ -100,7 +110,7 @@ def main(infile,outfile,tissue,outdir,create,skip):
 										antibody,imageFile = antibodyPlusImage.split('/')
 										result = {}
 										result['ensg_id'] = gene
-										result['tissue'] = tissue
+										result['tissue_or_cancer'] = tissue
 										result['protein_url'] = url
 										result['image_url'] = imageUrl
 										result['antibody'] = antibody
@@ -155,36 +165,49 @@ def downloadImage(imageUrl,image_name,outdir):
 
 def parsePatientInfo(mo):
 	patientInfo = {'demographic' : '','tissue' : '','diagnosis' : '', 'patient_id' : ''}
-	parts = mo.split('<br>')
-	m = re.search(r'<b>(.*)</b>',parts[0])
+	mo = mo.replace('<br>','\n') #convert to newlines / multiline
+	#mo = mo.replace('<b>','')
+	#mo = mo.replace('</b>','')
+	#mo = mo.replace("tooltip('",'')
+	#mo = mo.replace("', 0);",'')
+
+	m = re.search(r'<b>(Female|Male), age (.*?)</b>',mo)
 	if m:
-		patientInfo['demographic'] = m.group(1)
-	m = re.search(r'<b>(.*)</b> \((.*)\)',parts[1])
+		patientInfo['demographic'] = '%s %s' % (m.group(1),m.group(2))
+
+	m = re.search(r'<b>(.*?)</b> \((T-.*?)\)',mo)
 	if m:
 		patientInfo['tissue'] = '%s %s' % (m.group(1),m.group(2))
-	m = re.search(r'<b>(.*)</b> \((.*)\)',parts[2])
-	if m:
-		patientInfo['diagnosis'] = '%s %s' % (m.group(1),m.group(2))
-	m = re.search(r'<b>Patient id:</b> *(\d+)',parts[3])
+
+	m = re.findall(r'<b>(.*?)</b> \((M-.*?)\)',mo,re.M)
+	patientInfo['diagnosis'] = '|'.join( ['%s %s' % dx for dx in m] )
+
+	m = re.search(r'<b>Patient id:</b> *(\d+)',mo)
 	if m:
 		patientInfo['patient_id'] = m.group(1)
+
 	return patientInfo
 
 def parseStainingInfo(mo):
 	stainingInfo = {'staining' : '','intensity' : '', 'quantity' : '', 'location' : ''}
-	parts = mo.split('<br>')
-	m = re.search(r'<b>Antibody staining:</b> *(.+) *',parts[5])
+	mo = mo.replace('<br>','\n') #convert to newlines / multiline
+
+	m = re.search(r'<b>Antibody staining:</b> *(.+) *',mo)
 	if m:
 		stainingInfo['staining'] = m.group(1)
-	m = re.search(r'<b>Intensity:</b> *(.+) *',parts[6])
+
+	m = re.search(r'<b>Intensity:</b> *(.+) *',mo)
 	if m:
 		stainingInfo['intensity'] = m.group(1)
-	m = re.search(r'<b>Quantity:</b> *(.+) *',parts[7])
+
+	m = re.search(r'<b>Quantity:</b> *(.+) *',mo)
 	if m:
 		stainingInfo['quantity'] = m.group(1)
-	m = re.search(r"<b>Location:</b> *(.+)'",parts[8])
+
+	m = re.search(r"<b>Location:</b> *(.+)'",mo)
 	if m:
 		stainingInfo['location'] = m.group(1)
+
 	return stainingInfo
 
 def writeExifUserComment(imagePath,userCommentAsDict):
