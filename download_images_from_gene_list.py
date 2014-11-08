@@ -24,6 +24,7 @@ usage: download_images_from_gene_list.py <input_file> <output_file> <tissue> <ou
 # 08-05-2014 TC combined two scripts to create this one
 # 10-07-2014 TC changed the looping structure to make resuming easier
 # 10-08-2014 TC added error logging, better handling of ctrl-c / keyboard interrupt
+# 11-08-2014 TC fixed cancer v tissue parse error, added retrieval of pt & staining data for cancers
 
 __author__ = "Marc Halushka, Toby Cornish"
 __copyright__ = "Copyright 2014, Johns Hopkins University"
@@ -55,9 +56,12 @@ cancers = 	['colorectal cancer','breast cancer','prostate cancer',
 def main(infile,outfile,tissue,outdir,create,skip):
 	logFile = os.path.join(outDir,'log.txt')
 	errors = False
+	isCancer = tissue.lower() in cancers #the cancers have different web pages and urls
 
 	with open(outfile, "ab") as f: #create or append .csv output file to write to here
 		fieldnames = ['image_file','ensg_id','tissue','antibody','protein_url','image_url']
+		if isCancer:
+			fieldnames.extend(['demographic','tissue','diagnosis','patient_id','staining','intensity','quantity','location'])
 		writer = csv.DictWriter(f, dialect='excel',fieldnames=fieldnames)
 		#add the header if this is a new file
 		if create:
@@ -70,10 +74,12 @@ def main(infile,outfile,tissue,outdir,create,skip):
 				if gene in skip:
 					print '  Skipping...'
 				else:
-					if tissue.lower() in cancers: #the cancers need a different url
+					if isCancer:
 						url = 'http://www.proteinatlas.org/%s/cancer/tissue/%s' % (gene, urllib2.quote(tissue))
+						attrib = 'name' #for some reason cancer uses name
 					else:
 						url = 'http://www.proteinatlas.org/%s/tissue/%s' % (gene, urllib2.quote(tissue))
+						attrib = 'id' #for some reason tissue uses id
 					try:
 						# retrieve the html page from HPA and parse it
 						soup = BeautifulSoup(urllib2.urlopen(url).read())
@@ -82,8 +88,8 @@ def main(infile,outfile,tissue,outdir,create,skip):
 							# tissue is found
 							links = soup.findAll('a') #find all the links in the page
 							for link in links:
-								if link.get('name') is not None: # ignore links that do not have names
-									if re.match('_image\d*',link.get('name')) is not None:
+								if link.get(attrib) is not None: # ignore links that do not have names
+									if re.match('_image\d*',link.get(attrib)) is not None:
 										# all the image links are named '_imageN', ignore if no match
 										image = link.img # get the img displayed for this link
 										imageUrl = 'http://www.proteinatlas.org' + image.get('src')
@@ -99,7 +105,12 @@ def main(infile,outfile,tissue,outdir,create,skip):
 										result['image_url'] = imageUrl
 										result['antibody'] = antibody
 										result['image_file'] = imageFile
-
+										if isCancer:
+											mo = image.get('onmouseover')
+											patientInfo = parsePatientInfo(mo)
+											stainingInfo = parseStainingInfo(mo)
+											result.update(patientInfo)
+											result.update(stainingInfo)
 										# download the image
 										downloadImage(result['image_url'],result['image_file'],outdir)
 										imagePath = os.path.join(outdir,result['image_file'])
@@ -141,6 +152,40 @@ def downloadImage(imageUrl,image_name,outdir):
 	except Exception,e: # catch any errors & pass on the message
 		print 'Caught Exception: %s' % str(e)
 		print traceback.format_exc()
+
+def parsePatientInfo(mo):
+	patientInfo = {'demographic' : '','tissue' : '','diagnosis' : '', 'patient_id' : ''}
+	parts = mo.split('<br>')
+	m = re.search(r'<b>(.*)</b>',parts[0])
+	if m:
+		patientInfo['demographic'] = m.group(1)
+	m = re.search(r'<b>(.*)</b> \((.*)\)',parts[1])
+	if m:
+		patientInfo['tissue'] = '%s %s' % (m.group(1),m.group(2))
+	m = re.search(r'<b>(.*)</b> \((.*)\)',parts[2])
+	if m:
+		patientInfo['diagnosis'] = '%s %s' % (m.group(1),m.group(2))
+	m = re.search(r'<b>Patient id:</b> *(\d+)',parts[3])
+	if m:
+		patientInfo['patient_id'] = m.group(1)
+	return patientInfo
+
+def parseStainingInfo(mo):
+	stainingInfo = {'staining' : '','intensity' : '', 'quantity' : '', 'location' : ''}
+	parts = mo.split('<br>')
+	m = re.search(r'<b>Antibody staining:</b> *(.+) *',parts[5])
+	if m:
+		stainingInfo['staining'] = m.group(1)
+	m = re.search(r'<b>Intensity:</b> *(.+) *',parts[6])
+	if m:
+		stainingInfo['intensity'] = m.group(1)
+	m = re.search(r'<b>Quantity:</b> *(.+) *',parts[7])
+	if m:
+		stainingInfo['quantity'] = m.group(1)
+	m = re.search(r"<b>Location:</b> *(.+)'",parts[8])
+	if m:
+		stainingInfo['location'] = m.group(1)
+	return stainingInfo
 
 def writeExifUserComment(imagePath,userCommentAsDict):
 	# read in the exif data, add the user comment as json, and write it
@@ -244,6 +289,7 @@ if __name__ == '__main__':
 			overwrite = query_yes_no('Overwrite?',default="no")
 			if overwrite:
 				os.remove(outFile)
+				create = True
 			else:
 				resume = query_yes_no('Try to resume?',default="yes")
 				if resume:
@@ -253,7 +299,6 @@ if __name__ == '__main__':
 					if not append:
 						print 'ok. exiting...'
 						sys.exit()
-
 
 		main(inFile,outFile,tissue,outDir,create,skip)
 
