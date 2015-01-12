@@ -31,7 +31,7 @@ Here are some tips for installing the dependencies on Windows:
 - After installing Python, make sure the python directory containing python.exe is on the Windows search path; if not, add it to the path; see http://stackoverflow.com/questions/6318156/adding-python-path-on-windows-7 or similar.
 - For Pygame and pyexiv2, we recommend using the windows installers at http://www.lfd.uci.edu/~gohlke/pythonlibs/ because both depend on native binaries
 - BeautifulSoup4 and Mechanize can be installed using the usual methods in python, including ez_setup.py, easy_install.exe (from setuptools), and pip.exe
-- Adding the Scripts directory (in the your python installation directory, usally C:\Python27\Scripts or similar) to your path will make it more convenient to use pip.exe or easy_install.exe for installing python modules
+- Adding the Scripts directory (in your python installation directory, usually C:\Python27\Scripts or similar) to your path will make it more convenient to use pip.exe or easy_install.exe for installing python modules
 
 
 HPASubC Installation
@@ -56,7 +56,7 @@ ENSG00000000003
 ENSG00000000005
 ENSG00000000419
 
-**output_file**: A CSV file with four columns:
+**output_file**: A CSV file with 6 columns:
 - image_file: the name of the image file downloaded
 - ensg_id: the Ensembl gene id
 - tissue: the tissue represented in the image
@@ -71,7 +71,9 @@ ENSG00000000419
 
 image_viewer.py
 --------------
-usage: `image_viewer.py input_dir output_file`
+####Usage:
+
+`image_viewer.py input_dir output_file`
 
 This script will open all of the image files within a folder and allow them to be quickly scanned for any staining pattern of interest.  Any image file that can be opened by PyGame can be used, but the extension will need to be added to the imageExtensions list to be recognized. By default, only JPEGs are recognized. Either the keyboard or a PyGame-compatible USB gamepad/joystick can be used (finally, a legitimate reason to have a video game controller on your desk at work).
 
@@ -101,7 +103,9 @@ The score will be displayed in an animation, this can be shut off by setting ani
 
 image_scorer.py
 --------------
-usage: `image_scorer.py input_dir output_file`
+####Usage:
+
+`image_scorer.py input_dir output_file`
 
 This script allows one to assign a score or other arbitrary value to each image in a directory.  It supports arbitrary key bindings defined in the scoreKeys dict.  By default, SPACE and 0 are defined as '0', and '1','2','3','4', and '5' are the scores 1 to 5, respectively. Arbitrary strings such as 'cancer' or 'normal' could also be bound to keys.
 
@@ -115,7 +119,7 @@ We generally put 3,000 images in one folder and scan them in these smaller block
 
 **input_dir**: A folder of pygame-compatible images (JPEGs by default) A folder of downloaded .jpg images. Note: We use this HPASubC_image_scorer.py script directly in the image folder.
 
-**output_file**: A CSV file with six columns:
+**output_file**: A CSV file with 6 columns:
 - image_file: the name of the image file downloaded
 - ensg_id: the Ensembl gene id
 - tissue: the tissue represented in the image
@@ -126,7 +130,9 @@ We generally put 3,000 images in one folder and scan them in these smaller block
 
 download_protein_data_from_gene_list.py
 --------------
-usage: `download_protein_data_from_gene_list.py input_file output_file`
+####Usage:
+
+`download_protein_data_from_gene_list.py input_file output_file`
 
 Given a file listing Ensembl gene ids, this script returns a CSV file with the following protein and gene data from HPA.
 
@@ -137,7 +143,7 @@ ENSG00000000003
 ENSG00000000005
 ENSG00000000419
 
-**output_file**: A CSV file with six columns:
+**output_file**: A CSV file with 6 columns:
   ensg_id: the Ensembl gene id
   gene_name: the corresponding short gene name
   gene_description: the full gene name and/or description
