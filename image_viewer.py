@@ -282,8 +282,17 @@ def readExifUserComment(imagePath):
 
 def identifyGamepad():
 	if pygame.joystick.get_count() > 0:
-		print 'found %s joystick(s).' % pygame.joystick.get_count()
-		pygame.joystick.Joystick(0).init()
+		print 'found %s gamepad(s).' % pygame.joystick.get_count()
+		joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
+		for i,j in enumerate(joysticks):
+			pygame.joystick.Joystick(i).init()
+			print
+			print 'Gamepad %s, : %s' % (i,j.get_name())
+			print '  found %s axes (%s joysticks)' % (j.get_numaxes(),j.get_numaxes()/2)
+			print '  found %s buttons' % j.get_numbuttons()
+			numhats = j.get_numhats()
+			print '  found %s hats' % numhats
+			print
 	else:
 		print 'No joysticks found!'
 
