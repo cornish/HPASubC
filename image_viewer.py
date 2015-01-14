@@ -6,20 +6,20 @@ The HPA image download script in this suite embeds metadata (ensg_id, antibody, 
 
 If a gamepad/joystick is plugged in, it will be detected (the first one found will be used).  The gamepad/joystick left and right go forward and backward through images. Other buttons are configurable under BUTTON_BINDINGS in this file.  The script will print the button being pressed to stdout if you need to know the number scheme for your gamepad/joystick, and want to remap the buttons for your gamepad (very likely).
 
-The keyboard can be used as well. The keys can be remapped in this file under KEY_BINDINGS. A complete list of all pygame key events can be found at http://www.pygame.org/docs/ref/key.html 
+The keyboard can be used as well. The keys can be remapped in this file under KEY_BINDINGS. A complete list of all pygame key events can be found at http://www.pygame.org/docs/ref/key.html
 
 Default key bindings are: LEFT ARROW goes to previous image. RIGHT ARROW goes to next image. SPACE BAR selects. The MINUS key zooms out.  The EQUALS (unshifted plus) key zooms in. The ESCAPE key exits and closes the window.
 
 The output file is a CSV file (with header) listing one row for each that was selected by the user. The file is appended as each image is selected. Columns are:
 
   image_file: the name of the image file downloaded
-  ensg_id: the Ensembl gene id 
+  ensg_id: the Ensembl gene id
   tissue: the tissue represented in the image
   antibody: the id of the antibody in the image
   image_url: the HPA url the image was downloaded from
- 
+
 The score will be displayed in an animation, this can be shut off by setting animate to False
- 
+
 Finally, if the default zoom level (33% or 0.33) is not appropriate for your monitor, you can change that setting in this file as well.
 
 usage: image_viewer.py <input_dir> <output_file>
@@ -74,23 +74,27 @@ def main(indir,outfile):
 	pygame.init()
 	pygame.joystick.init()
 	identifyGamepad()
-	
+
 	#identify files; quit if no image files found
 	files = getImageFiles(indir,imageExtensions)
 	numImages = len(files)
 	if numImages < 1:
 		print 'No image files found in input directory.'
 		sys.exit()
-	
+
 	images = readAllImageMetadata(files)
-	
+
 	#initialize variables
 	scale = defaultScale
 	i = 0
 	screen = reset_screen((200,200)) #to initialize the pygame screen
 	fullImage = pygame.image.load(images[i]['image_path']).convert()
 
+# Initialise clock
+	clock = pygame.time.Clock()
+
 	while True: #pygame loop
+		clock.tick(10)
 		title = '%s of %s : %s : %.2f%%' % (i+1,numImages,images[i]['image_file'],scale*100)
 		for e in pygame.event.get(): #check the event loop
 			if e.type == pygame.QUIT:
@@ -110,7 +114,7 @@ def main(indir,outfile):
 					fullImage,i = nextImage(images,i)
 				if e.key == prevKey: #previous
 					fullImage,i = prevImage(images,i)
-					
+
 			if e.type == pygame.JOYBUTTONDOWN:
 				print("Joystick button % s pressed." % e.dict['button'])
 				if e.dict['button'] == selectButton and i < numImages-1: #save and advance
@@ -139,23 +143,34 @@ def main(indir,outfile):
 					elif value > 0:
 						scale = scale / 1.5
 				print i
-				
+
+			if e.type == pygame.JOYHATMOTION:
+				print("Joystick hat %s" % e.dict['hat'])
+				print("Joystick hat value %s, %s" % e.dict['value'])
+				x = e.dict['value'][0]
+				y = e.dict['value'][1]
+				#right-left axis:
+				if x > 0 and i < numImages-1:
+						fullImage,i = nextImage(images,i)
+				elif x < 0 and i > 0:
+						fullImage,i = prevImage(images,i)
+
 		showImage(fullImage,'%s of %s : %s : %.2f%%' % (i+1,numImages,images[i]['image_file'],scale*100),scale)
 		pygame.display.flip()
 		pygame.time.delay(25)
-	
+
 def showImage(fullImage,title,scale):
 	scaledImage = scaleImage(fullImage,scale)
 	screen = reset_screen((scaledImage.get_width(), scaledImage.get_height()))
 	addTextToImage(scaledImage,title)
 	screen.blit(scaledImage, (0,0))
-	
+
 def scaleImage(fullImage,scale):
 	(w,h) = fullImage.get_rect().size
 	(w,h) = scaleTuple(fullImage.get_rect().size,scale)
 	scaledImage = pygame.transform.scale(fullImage, (w,h))
 	return scaledImage
-	
+
 def addTextToImage(surf,s):
 	font = pygame.font.Font(None, 36)
 	text = font.render(s, 1, (255, 0, 0))
@@ -191,41 +206,41 @@ def animateText(fullImage,title,scale,animateString):
 			screen.blit(text, textpos)
 			pygame.display.flip()
 			pygame.time.delay(1)
-	
+
 def writeResult(outfile,images,i):
-	with open(outfile,'a+b') as f: 
+	with open(outfile,'a+b') as f:
 		#open with a+ mode, read at beginning, write at the end
-		fieldnames = ['image_file','ensg_id','tissue','antibody','image_url']	
+		fieldnames = ['image_file','ensg_id','tissue','antibody','image_url']
 		writer = csv.DictWriter(f, dialect='excel',fieldnames=fieldnames,extrasaction='ignore')
 		lineCount = 0
 		for lineCount,l in enumerate(f):
 			pass
 		if lineCount == 0: #if the file length is zero lines, write the header
 			writer.writerow(dict((fn,fn) for fn in fieldnames))
-		writer.writerow(images[i]) 
+		writer.writerow(images[i])
 
 def nextImage(images,i):
 	print 'nextImage   -> %s' % images[i]['image_file']
 	i += 1
-	if i > len(images) - 1: 
+	if i > len(images) - 1:
 		i = len(images) - 1
 	fullImage = pygame.image.load(images[i]['image_path']).convert()
 	return fullImage,i
-	
+
 def prevImage(images,i):
 	print 'prevImage   -> %s' % images[i]['image_file']
 	i -= 1
-	if i < 0: 
+	if i < 0:
 		i = 0
 	fullImage = pygame.image.load(images[i]['image_path']).convert()
 	return fullImage,i
-			
+
 def scaleTuple(tup,scale):
 	return tuple([int(round(scale*i)) for i in tup])
 
 def reset_screen(res) :
 	screen = pygame.display.set_mode(res)
-	pygame.display.set_caption("pyview")
+	pygame.display.set_caption("HPASubC image_viewer")
 	return screen
 
 def getImageFiles(dir,exts):
@@ -245,7 +260,7 @@ def readAllImageMetadata(files):
 		images.append(image)
 	print '  done.'
 	return images
-		
+
 def readExifUserComment(imagePath):
 	# read in the exif data, convert the user comment from json to dict, return it
 	# use empty values if the data isn't found
@@ -264,7 +279,7 @@ def readExifUserComment(imagePath):
 		# the tag or exif isn't there, return the empty one
 		pass
 	return userComment
-	
+
 def identifyGamepad():
 	if pygame.joystick.get_count() > 0:
 		print 'found %s joystick(s).' % pygame.joystick.get_count()
