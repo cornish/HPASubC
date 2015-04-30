@@ -30,6 +30,7 @@ usage: download_images_from_gene_list_multi.py <input_file> <output_file> <tissu
 # CHANGE LOG:
 # 11-08-2014 TC first version using multiprocessing for parallel downloads
 # 11-09-2014 TC swapped in multithreading for multiprocessing
+# 04-30-2015 TC corrected error in arg parsing
 
 __author__ = "Marc Halushka, Toby Cornish"
 __copyright__ = "Copyright 2014, Johns Hopkins University"
@@ -329,7 +330,7 @@ def query_yes_no(question, default="yes"):
 			sys.exit()
 
 if __name__ == '__main__':
-	if len(sys.argv) < 5 and len(sys.argv) > 6:
+	if len(sys.argv) < 5 or len(sys.argv) > 6:
 		print '\nIncorrect number of arguments!\n\n'
 		print 'usage: %s <input_file> <output_file> <tissue> <output_dir> [workers]' % os.path.basename(sys.argv[0])
 		sys.exit()
