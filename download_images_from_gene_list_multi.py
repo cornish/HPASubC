@@ -232,7 +232,7 @@ def query_yes_no(question, default="yes"):
 def get_valid_tissues():
 	tissues_file = 'valid_tissues.txt'
 	if not os.path.isfile(tissues_file):
-		tissues = [i.tissue_or_cancer.lower() for i in Image.select(Image.tissue_or_cancer).distinct()]
+		tissues = get_tissues()
 		with open(tissues_file,'wb') as f:
 			for tissue in tissues:
 				f.write(tissue+'\n')
