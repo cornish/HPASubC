@@ -1,4 +1,4 @@
-HPASubC, v1.0 01/12/2015
+HPASubC, v1.2.0 01/10/2018
 ==============
 The Human Protein Atlas (HPA) Subcellular Classification (SubC) software package is a collection of python scripts by Marc Halushka and Toby Cornish at Johns Hopkins University School of Medicine, Baltimore, MD. This is free software in the public space. This suite of scripts has not been made in conjunction with the HPA, thus the HPA is in no way responsible for any data obtained through these methods. No warranties are given or implied.
 
@@ -13,16 +13,14 @@ Script files:
 1. download_images_from_gene_list.py
 2. image_viewer.py
 3. image_scorer.py
-4. download_protein_data_from_gene_list.py
 
 
 Dependencies:
 --------------
-- Python 2 (tested with python 2.7 https://www.python.org/downloads/)
-- BeautifulSoup4 (http://www.crummy.com/software/BeautifulSoup/)
-- Mechanize (http://wwwsearch.sourceforge.net/mechanize/)
-- Pygame (http://www.pygame.org/)
-- pyexiv2 (http://tilloy.net/dev/pyexiv2/)
+- Python 2 (tested with [Python 2.7](https://www.python.org/downloads/))
+- [Requests](https://pypi.python.org/pypi/requests)
+- [Pygame](http://www.pygame.org/)
+- [pyexiv2](https://launchpad.net/pyexiv2)
 
 
 Dependencies: Tips for Windows
@@ -30,7 +28,7 @@ Dependencies: Tips for Windows
 Here are some tips for installing the dependencies on Windows:
 - After installing Python, make sure the python directory containing python.exe is on the Windows search path; if not, add it to the path; see http://stackoverflow.com/questions/6318156/adding-python-path-on-windows-7 or similar.
 - For Pygame and pyexiv2, we recommend using the windows installers at http://www.lfd.uci.edu/~gohlke/pythonlibs/ because both depend on native binaries
-- BeautifulSoup4 and Mechanize can be installed using the usual methods in python, including ez_setup.py, easy_install.exe (from setuptools), and pip.exe
+- Requests can be installed using the usual methods in python, including ez_setup.py, easy_install.exe (from setuptools), and pip.exe
 - Adding the Scripts directory (in your python installation directory, usually C:\Python27\Scripts or similar) to your path will make it more convenient to use pip.exe or easy_install.exe for installing python modules
 
 
@@ -127,32 +125,7 @@ We generally put 3,000 images in one folder and scan them in these smaller block
 - score: the user-assigned score
 - image_url: the HPA url the image was downloaded from
 
-
-download_protein_data_from_gene_list.py
---------------
-####Usage:
-
-`download_protein_data_from_gene_list.py input_file output_file`
-
-Given a file listing Ensembl gene ids, this script returns a CSV file with the following protein and gene data from HPA.
-
-####Parameters:
-
-**input_file**: A txt file list of ENGS IDs without a header in the style of:
-ENSG00000000003
-ENSG00000000005
-ENSG00000000419
-
-**output_file**: A CSV file with 6 columns:
-  ensg_id: the Ensembl gene id
-  gene_name: the corresponding short gene name
-  gene_description: the full gene name and/or description
-  protein_class: the class of the gene product
-  entrez_data: the Entrez Gene Summary (if it exists)
-  protein_expr: a summary of the expression pattern across HPA samples
-
-
-APPENDIX A: Known tissues for HPA
+APPENDIX A: Known tissues for HPA (see HPA site for updates)
 --------------
 - Liver and pancreas
   - Liver
