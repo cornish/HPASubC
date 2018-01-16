@@ -1,4 +1,4 @@
-HPASubC, v1.2.1 01/10/2018
+HPASubC, v1.2.2 01/16/2018
 ==============
 The Human Protein Atlas (HPA) Subcellular Classification (SubC) software package is a collection of python scripts by Marc Halushka at Johns Hopkins University and Toby C. Cornish at the University of Colorado. This suite of scripts has not been made in conjunction with the HPA, thus the HPA is in no way responsible for any data obtained through these methods. No warranties are given or implied.
 
@@ -130,83 +130,78 @@ We generally put 3,000 images in one folder and scan them in these smaller block
 - score: the user-assigned score
 - image_url: the HPA url the image was downloaded from
 
-APPENDIX A: Known tissues for HPA (see HPA site for updates)
---------------
-- Liver and pancreas
-  - Liver
-  - Gallbladder
-  - Pancreas
-- Digestive tract (GI  -tract)
-  - Oral mucosa
-  - Salivary gland
-  - Esophagus
-  - Stomach
-  - Duodenum
-  - Small Intestine
-  - Appendix
-  - Colon
-  - Rectum
-- Urinary tract (Kidney and bladder)
-  - Kidney
-  - Urinary bladder
-- Male reproductive system (Male tissues)
-  - Testis
-  - Epididymis
-  - Prostate
-  - Seminal vesicle
-- Breast and female reproductive system
-  - Breast
-  - Vagina
-  - Cervix, uterine
-  - Uterus
-  - Fallopian tube
-  - Ovary
-  - Placenta
-- Blood and immune system (Hematopoietic)
-  - Bone marrow
-  - Lymph node
-  - Tonsil
-  - Spleen
-- Central nervous system (Brain)
-  - Cerebral cortex
-  - Hippocampus
-  - Lateral ventricle
-  - Cerebellum
-- Endocrine glands
-  - Thyroid gland
-  - Parathyroid gland
-  - Adrenal gland
-- Respiratory system (Lung)
-  - Nasopharynx
-  - Bronchus
-  - Lung
-- Cardiovascular system
-  - Heart muscle
-- Skin and soft tissues
-  - Skin
-  - Skeletal muscle
-  - Smooth muscle
-  - Soft tissue
 
-APPENDIX B: Known cancer tissues for HPA
+APPENDIX A: Known tissues for HPA v18
 --------------
-- Colorectal cancer
-- Breast cancer
-- Prostate cancer
-- Ovarian cancer
-- Cervical cancer
-- Endometrial cancer
-- Carcinoid
-- Head and neck cancer
-- Thyroid cancer
-- Glioma
-- Lymphoma
-- Lung cancer
-- Melanoma
-- Skin cancer
-- Testis cancer
-- Urothelial cancer
-- Renal cancer
-- Stomach cancer
-- Pancreatic cancer
-- Liver cancer
+appendix
+pancreas
+lung
+prostate
+epididymis
+placenta
+parathyroid gland
+stomach 1
+stomach 2
+small intestine
+gallbladder
+urinary bladder
+testis
+ovary
+tonsil
+rectum
+duodenum
+colon
+liver
+kidney
+fallopian tube
+lymph node
+oral mucosa
+seminal vesicle
+salivary gland
+vagina
+breast
+thyroid gland
+skeletal muscle
+soft tissue 1
+soft tissue 2
+esophagus
+bronchus
+endometrium 1
+endometrium 2
+bone marrow
+adrenal gland
+heart muscle
+smooth muscle
+skin 2
+skin 1
+nasopharynx
+cervix, uterine
+spleen
+cerebral cortex
+hippocampus
+caudate
+cerebellum
+
+
+APPENDIX B: Known cancer tissues for HPA v18
+--------------
+testis cancer
+urothelial cancer
+renal cancer
+stomach cancer
+pancreatic cancer
+liver cancer
+colorectal cancer
+breast cancer
+prostate cancer
+ovarian cancer
+cervical cancer
+endometrial cancer
+carcinoid
+head and neck cancer
+thyroid cancer
+glioma
+lymphoma
+lung cancer
+melanoma
+skin cancer
