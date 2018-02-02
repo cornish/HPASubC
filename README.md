@@ -46,7 +46,7 @@ download_images_from_gene_list.py
 --------------
 ### Usage:
 
-`download_images_from_gene_list.py input_file output_file tissue output_dir`
+`download_images_from_gene_list.py input_file output_file tissue output_dir [workers]`
 
 For a list of gene ids and a tissue type, this script will parse the HPA results, extract all image URLs, and output a list of .jpg image urls.  This file requires a .txt input file of ENSG IDs and outputs a .csv file. HPA ENSG IDs can be obtained here: http://www.proteinatlas.org/about/download.
 
@@ -71,6 +71,7 @@ ENSG00000000419
 
 **output_dir**: A folder to contain the downloaded JPEG images.  It will be created if it does not exist.
 
+**workers**: The number of threads to use for downloading images. Optional. Defaults to 3.
 
 image_viewer.py
 --------------
