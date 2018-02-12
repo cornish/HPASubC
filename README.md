@@ -2,6 +2,12 @@ HPASubC, v1.2.2 01/16/2018
 ==============
 The Human Protein Atlas (HPA) Subcellular Classification (SubC) software package is a collection of python scripts by Marc Halushka at Johns Hopkins University and Toby C. Cornish at the University of Colorado. This suite of scripts has not been made in conjunction with the HPA, thus the HPA is in no way responsible for any data obtained through these methods. No warranties are given or implied.
 
+Citing:
+--------------
+In addition to citing this GitHub repository (https://github.com/cornish/HPASubC), please cite the following paper:
+
+Cornish TC, Chakravarti A, Kapoor A, Halushka MK. HPASubC: A suite of tools for user subclassification of human protein atlas tissue images. *J Pathol Inform* 2015;6:36.
+
 
 Development Roadmap:
 --------------
