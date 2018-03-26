@@ -17,12 +17,12 @@ usage: move_images_by_selected.py <input_dir> <output_dir> <value>
 # 11-09-2014 TC created, re-used bits of image_viewer.py code
 
 __author__ = "Marc Halushka, Toby Cornish"
-__copyright__ = "Copyright 2014, Johns Hopkins University"
+__copyright__ = "Copyright 2014-2017, Johns Hopkins University"
 __credits__ = ["Marc Halushka", "Toby Cornish"]
 __license__ = "GPL"
-__version__ = "1.0.0"
-__maintainer__ = "Toby Cornish"
-__email__ = "tcornis3@jhmi.edu"
+__version__ = "1.2.0"
+__maintainer__ = "Toby C. Cornish"
+__email__ = "tcornish@gmail.com"
 
 import os
 import sys

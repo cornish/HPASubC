@@ -27,8 +27,8 @@ __author__ = "Marc Halushka, Toby Cornish"
 __copyright__ = "Copyright 2014-2017, Johns Hopkins University"
 __credits__ = ["Marc Halushka", "Toby Cornish"]
 __license__ = "GPL"
-__version__ = "1.1.0"
-__maintainer__ = "Toby Cornish"
+__version__ = "1.2.0"
+__maintainer__ = "Toby C. Cornish"
 __email__ = "tcornish@gmail.com"
 
 import urllib2
@@ -39,7 +39,8 @@ import re
 import datetime
 import traceback
 import json
-import pyexiv2
+import piexif
+import piexif.helper
 from itertools import repeat
 import multiprocessing as mp
 from multiprocessing.dummy import Pool as ThreadPool
@@ -169,10 +170,15 @@ def downloadImage(imageUrl,image_name,outdir):
 
 def writeExifUserComment(imagePath,userCommentAsDict):
 	# read in the exif data, add the user comment as json, and write it
-	metadata = pyexiv2.ImageMetadata(imagePath)
-	metadata.read()
-	metadata['Exif.Photo.UserComment'] = json.dumps(userCommentAsDict)
-	metadata.write()
+	exif_dict = piexif.load(imagePath)
+	# convert the jason to proper encoding	
+	user_comment = piexif.helper.UserComment.dump(json.dumps(userCommentAsDict))
+	# pop it into the exif_dict
+	exif_dict["Exif"][piexif.ExifIFD.UserComment] = user_comment
+	# get the exif as bytes
+	exif_bytes = piexif.dump(exif_dict)
+	# insert the modified exif_bytes
+	piexif.insert(exif_bytes, imagePath)
 
 def fileIsWriteable(filePath):
 	exists = os.path.exists(filePath)

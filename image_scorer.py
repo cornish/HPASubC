@@ -29,14 +29,15 @@ usage: image_scorer.py <input dir> <output file>
 # 07-11-2014 TC additional code clean up and documentation
 # 07-24-2014 TC refactor code
 # 08-05-2014 TC added exif metadata reading and handling
+# 03-26-2018 TC changed from pvexiv2 to piexif
 
 __author__ = "Marc Halushka, Toby Cornish"
-__copyright__ = "Copyright 2014, Johns Hopkins University"
+__copyright__ = "Copyright 2014-2017, Johns Hopkins University"
 __credits__ = ["Marc Halushka", "Toby Cornish"]
 __license__ = "GPL"
-__version__ = "1.0.0"
-__maintainer__ = "Toby Cornish"
-__email__ = "tcornis3@jhmi.edu"
+__version__ = "1.2.0"
+__maintainer__ = "Toby C. Cornish"
+__email__ = "tcornish@gmail.com"
 
 import os
 import sys
@@ -44,7 +45,8 @@ import math
 import csv
 import json
 import pygame
-import pyexiv2
+import piexif
+import piexif.helper
 
 # KEY_BINDINGS
 nextKey = pygame.K_RIGHT
@@ -224,12 +226,11 @@ def readExifUserComment(imagePath):
 									'image_file' : '',
 								}
 	try:
-		metadata = pyexiv2.ImageMetadata(imagePath)
-		metadata.read()
-		userComment = json.loads(metadata['Exif.Photo.UserComment'].value)
+		exif_dict = piexif.load(imagePath)
+		userComment = json.loads(piexif.helper.UserComment.load(exif_dict["Exif"][piexif.ExifIFD.UserComment]))
+
 	except Exception, e:
 		# the tag or exif isn't there, return the empty one
-		print e
 		pass
 	return userComment
 	

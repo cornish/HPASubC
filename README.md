@@ -1,4 +1,4 @@
-HPASubC, v1.2.2 01/16/2018
+HPASubC, v1.2.3 03/26/2018
 ==============
 The Human Protein Atlas (HPA) Subcellular Classification (SubC) software package is a collection of python scripts by Marc Halushka at Johns Hopkins University and Toby C. Cornish at the University of Colorado. This suite of scripts has not been made in conjunction with the HPA, thus the HPA is in no way responsible for any data obtained through these methods. No warranties are given or implied.
 
@@ -11,7 +11,7 @@ Cornish TC, Chakravarti A, Kapoor A, Halushka MK. HPASubC: A suite of tools for 
 
 Development Roadmap:
 --------------
-The 1.2.0 release of HPASubC is essentially a patch/partial re-write of the existing project that has removed HPASubC's dependency on screen scraping the HPA website. Image metadata is now sourced via a RESTful API that serves a copy of the HPA data from a private server. This version is compatible with HPA v18 and should continue to work even when v19 is released. The long term plan for HPASubC is integrate a GUI frontend into the project, to move the project to python 3 (mostly due to issues with waning support for pyexiv2), and to maintain compatibility with updates to the HPA project.
+The 1.2.0 release of HPASubC is essentially a patch/partial re-write of the existing project that has removed HPASubC's dependency on screen scraping the HPA website. Image metadata is now sourced via a RESTful API that serves a copy of the HPA data from a private server. This version is compatible with HPA v18 and should continue to work even when v19 is released. The long term plan for HPASubC is integrate a GUI frontend into the project, to move the project to python 3, and to maintain compatibility with updates to the HPA project.
 
 
 License:
@@ -31,15 +31,14 @@ Dependencies:
 - Python 2 (tested with [Python 2.7](https://www.python.org/downloads/))
 - [Requests](https://pypi.python.org/pypi/requests)
 - [Pygame](http://www.pygame.org/)
-- [pyexiv2](https://launchpad.net/pyexiv2)
+- [piexif](https://pypi.python.org/pypi/piexif)
 
 
 Dependencies: Tips for Windows
 --------------
 Here are some tips for installing the dependencies on Windows:
 - After installing Python, make sure the python directory containing python.exe is on the Windows search path; if not, add it to the path; see http://stackoverflow.com/questions/6318156/adding-python-path-on-windows-7 or similar.
-- For Pygame and pyexiv2, we recommend using the windows installers at http://www.lfd.uci.edu/~gohlke/pythonlibs/ because both depend on native binaries
-- Requests can be installed using the usual methods in python, including ez_setup.py, easy_install.exe (from setuptools), and pip.exe
+- Pygame, piexif, and requests can be installed using the usual methods in python, including ez_setup.py, easy_install.exe (from setuptools), and pip.exe
 - Adding the Scripts directory (in your python installation directory, usually C:\Python27\Scripts or similar) to your path will make it more convenient to use pip.exe or easy_install.exe for installing python modules
 
 
