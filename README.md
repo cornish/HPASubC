@@ -29,8 +29,8 @@ Script files:
 Dependencies:
 --------------
 - Python 2 (tested with [Python 2.7](https://www.python.org/downloads/))
-- [Requests](https://pypi.python.org/pypi/requests)
-- [Pygame](http://www.pygame.org/)
+- [requests](https://pypi.python.org/pypi/requests)
+- [pygame](http://www.pygame.org/)
 - [piexif](https://pypi.python.org/pypi/piexif)
 
 
@@ -59,10 +59,10 @@ This script will download the full-sized HPA images from the .csv file generated
 
 ### Parameters:
 
-**input_file**: A txt file list of ENGS IDs without a header in the style of:
-ENSG00000000003
-ENSG00000000005
-ENSG00000000419
+**input_file**: A txt file list of ENSG IDs (one per line) without a header in the style of:  
+ENSG00000000003  
+ENSG00000000005  
+ENSG00000000419  
 
 **output_file**: A CSV file with 6 columns:
 - image_file: the name of the image file downloaded
