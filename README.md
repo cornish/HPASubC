@@ -1,4 +1,4 @@
-HPASubC, v1.2.3 03/26/2018
+HPASubC, v1.2.4 03/31/2018
 ==============
 The Human Protein Atlas (HPA) Subcellular Classification (SubC) software package is a collection of python scripts by Marc Halushka at Johns Hopkins University and Toby C. Cornish at the University of Colorado. This suite of scripts has not been made in conjunction with the HPA, thus the HPA is in no way responsible for any data obtained through these methods. No warranties are given or implied.
 
@@ -11,7 +11,9 @@ Cornish TC, Chakravarti A, Kapoor A, Halushka MK. HPASubC: A suite of tools for 
 
 Development Roadmap:
 --------------
-The 1.2.x release of HPASubC is essentially a patch/partial re-write of the existing project that has removed HPASubC's dependency on screen scraping the HPA website. Image metadata is now sourced via a RESTful API that serves a copy of the HPA data from a private server. This version is compatible with HPA v18 and should continue to work even when v19 is released. The long term plan for HPASubC is integrate a GUI frontend into the project, to move the project to python 3, and to maintain compatibility with updates to the HPA project.
+The 1.2.x release of HPASubC is essentially a patch/partial re-write of the existing project that has removed HPASubC's dependency on screen scraping the HPA website. Image metadata is now sourced via a RESTful API that serves a copy of the HPA data from a private server. This version is compatible with HPA v18 and should continue to work even when v19 is released. Version 1.2.4 and up should support both python 2.7 and python 3.
+
+The long term plan for HPASubC is integrate a GUI frontend into the project (version 2) and to maintain compatibility with updates to the HPA project.
 
 
 License:
@@ -28,7 +30,7 @@ Script files:
 
 Dependencies:
 --------------
-- Python 2 (tested with [Python 2.7](https://www.python.org/downloads/))
+- Python 2 or Python 3 (tested with [Python 2.7](https://www.python.org/downloads/) and [Python 3.6](https://www.python.org/downloads/))
 - [requests](https://pypi.python.org/pypi/requests)
 - [pygame](http://www.pygame.org/)
 - [piexif](https://pypi.python.org/pypi/piexif)

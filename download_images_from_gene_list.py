@@ -16,12 +16,21 @@ This script also embeds the above information as json in the Exif.UserComment ta
 
 usage: download_images_from_gene_list_multi.py <input_file> <output_file> <tissue> <output_dir> [workers]
 """
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
 # CHANGE LOG:
 # 11-08-2014 TC first version using multiprocessing for parallel downloads
 # 11-09-2014 TC swapped in multithreading for multiprocessing
 # 04-30-2015 TC corrected error in arg parsing
 # 12-19-2017 TC rewrote to source image url data from hpasubc REST api
+
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import input
+from builtins import str
 
 __author__ = "Marc Halushka, Toby Cornish"
 __copyright__ = "Copyright 2014-2017, Johns Hopkins University"
@@ -31,7 +40,7 @@ __version__ = "1.2.0"
 __maintainer__ = "Toby C. Cornish"
 __email__ = "tcornish@gmail.com"
 
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import csv
 import sys
 import os
@@ -51,7 +60,7 @@ def main(infile,outfile,tissue,outdir,create,skip,numWorkers):
 
 	fieldnames = ['image_file','ensg_id','tissue_or_cancer','antibody','protein_url','image_url']
 
-	with open(outfile, "ab") as f: #create or append .csv output file to write to here
+	with open(outfile, "a") as f: #create or append .csv output file to write to here
 		writer = csv.DictWriter(f, dialect='excel',fieldnames=fieldnames)
 		#add the header if this is a new file
 		if create:
@@ -64,15 +73,15 @@ def main(infile,outfile,tissue,outdir,create,skip,numWorkers):
 			gene = gene.strip()
 			if gene in skip:
 				skipList.append(gene)
-				print 'Skipping %s ...' % gene
+				print('Skipping %s ...' % gene)
 			else:
 				geneList.append(gene)
 
-	print '\nSkipping a total of %s ensg_ids' % len(skipList)
-	print 'Processing a total of %s ensg_ids' % len(geneList)
+	print('\nSkipping a total of %s ensg_ids' % len(skipList))
+	print('Processing a total of %s ensg_ids' % len(geneList))
 
 	#create a pool of workers
-	print 'Creating a pool of %s workers.\n' % numWorkers
+	print('Creating a pool of %s workers.\n' % numWorkers)
 	pool = ThreadPool(numWorkers)
 
 	#create shared queues to handle writing to our output and log files
@@ -83,13 +92,13 @@ def main(infile,outfile,tissue,outdir,create,skip,numWorkers):
 	#use a shared variable to keep a count of errors
 	errorCount = manager.Value('i',0)
 
-	print 'Getting image list...'
+	print('Getting image list...')
 	images = get_images(geneList,[tissue,])
-	print '  done.'
-	print 'Found a total of %s images' % len(images)
+	print('  done.')
+	print('Found a total of %s images' % len(images))
 
 	#zip together the data into an array of tuples so that we can use a map function
-	data = zip(images,repeat(outdir),repeat(outQ),repeat(logQ),repeat(errorCount))
+	data = list(zip(images,repeat(outdir),repeat(outQ),repeat(logQ),repeat(errorCount)))
 	#print data
 
 	#start the listener threads for the file writing queues
@@ -104,9 +113,9 @@ def main(infile,outfile,tissue,outdir,create,skip,numWorkers):
 	logQ.put('kill','')
 	pool.close()
 
-	print "Complete.\n"
+	print("Complete.\n")
 	if errorCount.value > 0:
-		print "There were %s errors.\n\nPlease check the log file: %s" % (errorCount.value,os.path.abspath(logFile))
+		print("There were %s errors.\n\nPlease check the log file: %s" % (errorCount.value,os.path.abspath(logFile)))
 
 def resultListener(q,filepath,fieldnames):
 	'''listens for messages on the q, writes to file using a csv writer. '''
@@ -127,9 +136,10 @@ def logListener(q,filepath):
 			timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 			f.write('%s %s  %s\n' % (timestamp,type,message) )
 
-def worker((image,outdir,outQ,logQ,errorCount)):
-	print 'Downloading %s (%s) ...\n' % (image['image_url']
-		,image['ensg_id'])
+def worker(xxx_todo_changeme):
+	(image,outdir,outQ,logQ,errorCount) = xxx_todo_changeme
+	print('Downloading %s (%s) ...\n' % (image['image_url']
+		,image['ensg_id']))
 	try:
 		result = {}
 		result['ensg_id'] = image['ensg_id']
@@ -147,26 +157,26 @@ def worker((image,outdir,outQ,logQ,errorCount)):
 		outQ.put(result)
 
 	except KeyboardInterrupt: #handle a ctrl-c
-		print 'Exiting'
+		print('Exiting')
 		sys.exit()
-	except Exception,e: # catch any errors & pass on the message
+	except Exception as e: # catch any errors & pass on the message
 		errorCount.value += 1
 		message = '%s %s %s' % (image['ensg_id'],image['image_url'],str(e))
 		logQ.put('ERROR',message)
-		print 'Caught Exception: %s' % str(e)
-		print traceback.format_exc()
+		print('Caught Exception: %s' % str(e))
+		print(traceback.format_exc())
 
 def downloadImage(imageUrl,image_name,outdir):
 	try:
-		print '    image: %s -> %s\n' % (imageUrl,image_name)
-		image_data = urllib2.urlopen(imageUrl).read()
+		print('    image: %s -> %s\n' % (imageUrl,image_name))
+		image_data = urllib.request.urlopen(imageUrl).read()
 		# Open output file in binary mode, write, and close.
 		imagePath = os.path.join(outdir,image_name)
 		with open(imagePath,'wb') as fout:
 			fout.write(image_data)
-	except Exception,e: # catch any errors & pass on the message
-		print 'Caught Exception: %s' % str(e)
-		print traceback.format_exc()
+	except Exception as e: # catch any errors & pass on the message
+		print('Caught Exception: %s' % str(e))
+		print(traceback.format_exc())
 
 def writeExifUserComment(imagePath,userCommentAsDict):
 	# read in the exif data, add the user comment as json, and write it
@@ -183,19 +193,19 @@ def writeExifUserComment(imagePath,userCommentAsDict):
 def fileIsWriteable(filePath):
 	exists = os.path.exists(filePath)
 	try:
-		f = open(filePath , 'ab')
+		f = open(filePath , 'a')
 		f.close()
 		if not exists:
 			os.remove(filePath)
 		return True
-	except Exception,e:
-		print e
+	except Exception as e:
+		print(e)
 		return False
 
 def readProgress(filePath):
 	# open csv file
 	uniqueIds = []
-	with open(filePath, 'rb') as f:
+	with open(filePath, 'r') as f:
 		# get number of columns
 		for line in f.readlines():
 			id = line.split(',')[1]
@@ -224,7 +234,7 @@ def query_yes_no(question, default="yes"):
 	while True:
 		try:
 			sys.stdout.write(question + prompt)
-			choice = raw_input().lower()
+			choice = input().lower()
 			if default is not None and choice == '':
 				return valid[default]
 			elif choice in valid:
@@ -239,21 +249,21 @@ def get_valid_tissues():
 	tissues_file = 'valid_tissues.txt'
 	if not os.path.isfile(tissues_file):
 		tissues = get_tissues()
-		with open(tissues_file,'wb') as f:
+		with open(tissues_file,'w') as f:
 			for tissue in tissues:
 				f.write(tissue+'\n')
 		return tissues
 	else:
 		lines = []
-		with open(tissues_file,'rb') as f:
+		with open(tissues_file,'r') as f:
 			lines = f.readlines()
 		return [l.strip() for l in lines] 
 
 
 if __name__ == '__main__':
 	if len(sys.argv) < 5 or len(sys.argv) > 6:
-		print '\nIncorrect number of arguments!\n\n'
-		print 'usage: %s <input_file> <output_file> <tissue> <output_dir> [workers]' % os.path.basename(sys.argv[0])
+		print('\nIncorrect number of arguments!\n\n')
+		print('usage: %s <input_file> <output_file> <tissue> <output_dir> [workers]' % os.path.basename(sys.argv[0]))
 		sys.exit()
 	else:
 		inFile = sys.argv[1]
@@ -269,32 +279,32 @@ if __name__ == '__main__':
 		tissues = get_valid_tissues()
 
 		if tissue.lower() not in tissues:
-			print 'The tissue %s is not a valid option.' % tissue
-			print 'Valid tissues are: %s' % ', '.join(tissues)
+			print('The tissue %s is not a valid option.' % tissue)
+			print('Valid tissues are: %s' % ', '.join(tissues))
 			sys.exit()
 
 		if not os.path.isfile(inFile):
-			print 'The input file %s does not exist.' % inFile
+			print('The input file %s does not exist.' % inFile)
 			sys.exit()
 
 		try:
 			if not os.path.exists(outDir):
 				# make the directory if it doesn't exist
 				os.makedirs(outDir)
-		except Exception,e: #catch error making directory
-			print e
-			print 'Error creating directory %s' % outDir
+		except Exception as e: #catch error making directory
+			print(e)
+			print('Error creating directory %s' % outDir)
 			sys.exit()
 
 		if not fileIsWriteable(outFile):
-			print 'The output file %s is not writable -- is it open?' % outFile
+			print('The output file %s is not writable -- is it open?' % outFile)
 			sys.exit()
 
 		create = True
 		skip = []
 		if os.path.exists(outFile):
 			create = False
-			print 'The output file %s exists.' % outFile
+			print('The output file %s exists.' % outFile)
 			overwrite = query_yes_no('Overwrite?',default="no")
 			if overwrite:
 				os.remove(outFile)
@@ -306,7 +316,7 @@ if __name__ == '__main__':
 				else:
 					append = query_yes_no('Append the file (or n to quit)?',default="yes")
 					if not append:
-						print 'ok. exiting...'
+						print('ok. exiting...')
 						sys.exit()
 
 		main(inFile,outFile,tissue,outDir,create,skip,numWorkers)

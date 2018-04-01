@@ -23,6 +23,9 @@ Finally, if the default zoom level (33% or 0.33) is not appropriate for your mon
 
 usage: image_scorer.py <input dir> <output file>
 """
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 # CHANGE LOG:
 # 06-18-2013 MK initial build
 # 08-29-2013 TC clean up and standardize code
@@ -30,6 +33,9 @@ usage: image_scorer.py <input dir> <output file>
 # 07-24-2014 TC refactor code
 # 08-05-2014 TC added exif metadata reading and handling
 # 03-26-2018 TC changed from pvexiv2 to piexif
+
+from builtins import str
+from builtins import range
 
 __author__ = "Marc Halushka, Toby Cornish"
 __copyright__ = "Copyright 2014-2017, Johns Hopkins University"
@@ -78,7 +84,7 @@ def main(indir,outfile):
 	files = getImageFiles(indir,imageExtensions)
 	numImages = len(files)
 	if numImages < 1:
-		print 'No image files found in input directory.'
+		print('No image files found in input directory.')
 		sys.exit()
 	
 	images = readAllImageMetadata(files)
@@ -102,9 +108,9 @@ def main(indir,outfile):
 					scale = scale / 1.5
 				if e.key == zoomOutKey: #zoom in
 					scale = scale * 1.5
-				if e.key in scoreKeys.keys():
+				if e.key in list(scoreKeys.keys()):
 					score = scoreKeys[e.key]
-					print score
+					print(score)
 					screen = pygame.display.get_surface()
 					animateText(fullImage,title,scale,score)
 					writeResult(outfile,images,i,score)
@@ -160,19 +166,26 @@ def animateText(fullImage,title,scale,animateString):
 	
 def writeResult(outfile,images,i,score):
 	images[i]['score'] = score
-	with open(outfile,'a+b') as f: 
-		#open with a+ mode, read at beginning, write at the end
-		fieldnames = ['image_file','ensg_id','tissue','antibody','score','image_url']
-		writer = csv.DictWriter(f, dialect='excel',fieldnames=fieldnames,extrasaction='ignore')
-		lineCount = 0
-		for lineCount,l in enumerate(f):
-			pass
-		if lineCount == 0: #if the file length is zero lines, write the header
-			writer.writerow(dict((fn,fn) for fn in fieldnames))
-		writer.writerow(images[i]) 
+
+	if os.path.exists(outfile):
+		mode = 'a' # append if already exists
+	else:
+		mode = 'w' # make a new file if not
+	
+	# there are some 2 v. 3 differences here to avoid extra blank lines
+	if (sys.version_info > (3, 0)):	
+		f = open(outfile,mode,newline='\n')
+	else:
+		f = open(outfile,mode+'b')
+	fieldnames = ['image_file','ensg_id','tissue_or_cancer','antibody','score','image_url']
+	writer = csv.DictWriter(f, dialect='excel',fieldnames=fieldnames,extrasaction='ignore')
+	if mode == 'w':
+		writer.writeheader()
+	writer.writerow(images[i]) 
+	f.close()
 		
 def nextImage(images,i):
-	print 'nextImage   -> %s' % images[i]['image_file']
+	print('nextImage   -> %s' % images[i]['image_file'])
 	i += 1
 	if i > len(images) - 1: 
 		i = len(images) - 1
@@ -180,7 +193,7 @@ def nextImage(images,i):
 	return fullImage,i
 	
 def prevImage(images,i):
-	print 'prevImage   -> %s' % images[i]['image_file']
+	print('prevImage   -> %s' % images[i]['image_file'])
 	i -= 1
 	if i < 0: 
 		i = 0
@@ -199,27 +212,27 @@ def getImageFiles(dir,exts):
 	files = []
 	for file in os.listdir(dir):
 		if os.path.splitext(file)[1] in exts:
-			print file
+			print(file)
 			files.append(os.path.join(dir,file))
 	return files
 	
 def readAllImageMetadata(files):
 	images = []
-	print 'Reading image file metadata...'
+	print('Reading image file metadata...')
 	for filePath in files:
 		image = readExifUserComment(filePath)
-		print image
+		print(image)
 		image['image_path'] = filePath
 		image['score'] = ''
 		images.append(image)
-	print '  done.'
+	print('  done.')
 	return images
 		
 def readExifUserComment(imagePath):
 	# read in the exif data, convert the user comment from json to dict, return it
 	# use empty values if the data isn't found
 	userComment = {	'ensg_id' : '',
-									'tissue' : '',
+									'tissue_or_cancer' : '',
 									'protein_url' : '',
 									'image_url' : '',
 									'antibody' : '',
@@ -229,14 +242,14 @@ def readExifUserComment(imagePath):
 		exif_dict = piexif.load(imagePath)
 		userComment = json.loads(piexif.helper.UserComment.load(exif_dict["Exif"][piexif.ExifIFD.UserComment]))
 
-	except Exception, e:
+	except Exception as e:
 		# the tag or exif isn't there, return the empty one
 		pass
 	return userComment
 	
 if __name__ == '__main__':
 	if len(sys.argv) != 3:
-		print 'usage: %s <input dir> <output file>' % os.path.basename(sys.argv[0])
+		print('usage: %s <input dir> <output file>' % os.path.basename(sys.argv[0]))
 		exit()
 	else:
 		main(sys.argv[1],sys.argv[2])

@@ -24,6 +24,11 @@ Finally, if the default zoom level (33% or 0.33) is not appropriate for your mon
 
 usage: image_viewer.py <input_dir> <output_file>
 """
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 # CHANGE LOG:
 # 06-18-2013 MK initial build
 # 08-29-2013 TC clean up and standardize code
@@ -31,6 +36,11 @@ usage: image_viewer.py <input_dir> <output_file>
 # 07-23-2014 TC refactor code
 # 08-05-2014 TC added exif metadata reading and handling
 # 03-26-2018 TC changed from pvexiv2 to piexif
+
+from builtins import str
+from builtins import range
+from future import standard_library
+standard_library.install_aliases()
 
 __author__ = "Marc Halushka, Toby Cornish"
 __copyright__ = "Copyright 2014-2017, Johns Hopkins University"
@@ -81,7 +91,7 @@ def main(indir,outfile):
 	files = getImageFiles(indir,imageExtensions)
 	numImages = len(files)
 	if numImages < 1:
-		print 'No image files found in input directory.'
+		print('No image files found in input directory.')
 		sys.exit()
 
 	images = readAllImageMetadata(files)
@@ -145,7 +155,7 @@ def main(indir,outfile):
 						scale = scale * 1.5
 					elif value > 0:
 						scale = scale / 1.5
-				print i
+				print(i)
 
 			if e.type == pygame.JOYHATMOTION:
 				print("Joystick hat %s" % e.dict['hat'])
@@ -182,7 +192,7 @@ def addTextToImage(surf,s):
 	surf.blit(text, textpos)
 
 def selectImage(outfile,images,i):
-	print 'selectImage -> %s' % images[i]['image_file']
+	print('selectImage -> %s' % images[i]['image_file'])
 	writeResult(outfile,images,i)
 
 def animateText(fullImage,title,scale,animateString):
@@ -211,19 +221,26 @@ def animateText(fullImage,title,scale,animateString):
 			pygame.time.delay(1)
 
 def writeResult(outfile,images,i):
-	with open(outfile,'a+b') as f:
-		#open with a+ mode, read at beginning, write at the end
-		fieldnames = ['image_file','ensg_id','tissue','antibody','image_url']
-		writer = csv.DictWriter(f, dialect='excel',fieldnames=fieldnames,extrasaction='ignore')
-		lineCount = 0
-		for lineCount,l in enumerate(f):
-			pass
-		if lineCount == 0: #if the file length is zero lines, write the header
-			writer.writerow(dict((fn,fn) for fn in fieldnames))
-		writer.writerow(images[i])
+	if os.path.exists(outfile):
+		mode = 'a' # append if already exists
+	else:
+		mode = 'w' # make a new file if not
+
+	# there are some 2 v. 3 differences here to avoid extra blank lines
+	if (sys.version_info > (3, 0)):	
+		f = open(outfile,mode,newline='\n')
+	else:
+		f = open(outfile,mode+'b')
+	#open with a+ mode, read at beginning, write at the end
+	fieldnames = ['image_file','ensg_id','tissue_or_cancer','antibody','image_url']
+	writer = csv.DictWriter(f, dialect='excel',fieldnames=fieldnames,extrasaction='ignore')
+	if mode == 'w':
+		writer.writeheader()
+	writer.writerow(images[i])
+	f.close()
 
 def nextImage(images,i):
-	print 'nextImage   -> %s' % images[i]['image_file']
+	print('nextImage   -> %s' % images[i]['image_file'])
 	i += 1
 	if i > len(images) - 1:
 		i = len(images) - 1
@@ -231,7 +248,7 @@ def nextImage(images,i):
 	return fullImage,i
 
 def prevImage(images,i):
-	print 'prevImage   -> %s' % images[i]['image_file']
+	print('prevImage   -> %s' % images[i]['image_file'])
 	i -= 1
 	if i < 0:
 		i = 0
@@ -250,25 +267,25 @@ def getImageFiles(dir,exts):
 	files = []
 	for file in os.listdir(dir):
 		if os.path.splitext(file)[1] in exts:
-			print file
+			print(file)
 			files.append(os.path.join(dir,file))
 	return files
 
 def readAllImageMetadata(files):
 	images = []
-	print 'Reading image file metadata...'
+	print('Reading image file metadata...')
 	for filePath in files:
 		image = readExifUserComment(filePath)
 		image['image_path'] = filePath
 		images.append(image)
-	print '  done.'
+	print('  done.')
 	return images
 
 def readExifUserComment(imagePath):
 	# read in the exif data, convert the user comment from json to dict, return it
 	# use empty values if the data isn't found
 	userComment = {	'ensg_id' : '',
-									'tissue' : '',
+									'tissue_or_cancer' : '',
 									'protein_url' : '',
 									'image_url' : '',
 									'antibody' : '',
@@ -278,30 +295,30 @@ def readExifUserComment(imagePath):
 		exif_dict = piexif.load(imagePath)
 		userComment = json.loads(piexif.helper.UserComment.load(exif_dict["Exif"][piexif.ExifIFD.UserComment]))
 
-	except Exception, e:
+	except Exception as e:
 		# the tag or exif isn't there, return the empty one
 		pass
 	return userComment
 
 def identifyGamepad():
 	if pygame.joystick.get_count() > 0:
-		print 'found %s gamepad(s).' % pygame.joystick.get_count()
+		print('found %s gamepad(s).' % pygame.joystick.get_count())
 		joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
 		for i,j in enumerate(joysticks):
 			pygame.joystick.Joystick(i).init()
-			print
-			print 'Gamepad %s, : %s' % (i,j.get_name())
-			print '  found %s axes (%s joysticks)' % (j.get_numaxes(),j.get_numaxes()/2)
-			print '  found %s buttons' % j.get_numbuttons()
+			print()
+			print('Gamepad %s, : %s' % (i,j.get_name()))
+			print('  found %s axes (%s joysticks)' % (j.get_numaxes(),j.get_numaxes()/2))
+			print('  found %s buttons' % j.get_numbuttons())
 			numhats = j.get_numhats()
-			print '  found %s hats' % numhats
-			print
+			print('  found %s hats' % numhats)
+			print()
 	else:
-		print 'No joysticks found!'
+		print('No joysticks found!')
 
 if __name__ == '__main__':
 	if len(sys.argv) != 3:
-		print 'usage: %s <input dir> <output file>' % os.path.basename(sys.argv[0])
+		print('usage: %s <input dir> <output file>' % os.path.basename(sys.argv[0]))
 		exit()
 	else:
 		main(sys.argv[1],sys.argv[2])
