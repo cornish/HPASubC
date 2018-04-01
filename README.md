@@ -34,13 +34,14 @@ Dependencies:
 - [requests](https://pypi.python.org/pypi/requests)
 - [pygame](http://www.pygame.org/)
 - [piexif](https://pypi.python.org/pypi/piexif)
+- [future](https://pypi.python.org/pypi/future)
 
 
 Dependencies: Tips for Windows
 --------------
 Here are some tips for installing the dependencies on Windows:
 - After installing Python, make sure the python directory containing python.exe is on the Windows search path; if not, add it to the path; see http://stackoverflow.com/questions/6318156/adding-python-path-on-windows-7 or similar.
-- Pygame, piexif, and requests can be installed using the usual methods in python, including ez_setup.py, easy_install.exe (from setuptools), and pip.exe
+- Pygame, piexif, requests, and future can be installed using the usual PyPi methods in python, including ez_setup.py, easy_install.exe (from setuptools), and pip.exe
 - Adding the Scripts directory (in your python installation directory, usually C:\Python27\Scripts or similar) to your path will make it more convenient to use pip.exe or easy_install.exe for installing python modules
 
 
