@@ -240,7 +240,11 @@ def readExifUserComment(imagePath):
 								}
 	try:
 		exif_dict = piexif.load(imagePath)
-		userComment = json.loads(piexif.helper.UserComment.load(exif_dict["Exif"][piexif.ExifIFD.UserComment]))
+		#fix exiv encoding issue if found
+		s = exif_dict['Exif'][37510]
+		s = exif_dict['Exif'][37510].replace('\x00\x00\x00\x00\x00\x00\x00\x00','')
+		userComment = json.loads(s)
+		#userComment = json.loads(piexif.helper.UserComment(exif_dict["Exif"][piexif.ExifIFD.UserComment]))
 
 	except Exception as e:
 		# the tag or exif isn't there, return the empty one
