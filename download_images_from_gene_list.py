@@ -40,6 +40,7 @@ __version__ = "1.2.0"
 __maintainer__ = "Toby C. Cornish"
 __email__ = "tcornish@gmail.com"
 
+import logging
 import urllib.request, urllib.error, urllib.parse
 import csv
 import sys
@@ -54,6 +55,21 @@ from itertools import repeat
 import multiprocessing as mp
 from multiprocessing.dummy import Pool as ThreadPool
 from api_client import get_tissues, get_genes, get_images
+
+#configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# create a file handler
+handler = logging.FileHandler('download_images.log')
+handler.setLevel(logging.INFO)
+
+# create a logging format
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+# add the handlers to the logger
+logger.addHandler(handler)
 
 def main(infile,outfile,tissue,outdir,create,skip,numWorkers):
 	logFile = os.path.join(outDir,'log.txt')
@@ -319,4 +335,6 @@ if __name__ == '__main__':
 						print('ok. exiting...')
 						sys.exit()
 
+		#logger.info(inFile,outFile,tissue,outDir,create,skip,numWorkers)
+		logger.info(inFile)
 		main(inFile,outFile,tissue,outDir,create,skip,numWorkers)
