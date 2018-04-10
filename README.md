@@ -140,75 +140,75 @@ We generally put 3,000 images in one folder and scan them in these smaller block
 
 APPENDIX A: Known tissues for HPA v18
 --------------
-appendix
-pancreas
-lung
-prostate
-epididymis
-placenta
-parathyroid gland
-stomach 1
-stomach 2
-small intestine
-gallbladder
-urinary bladder
-testis
-ovary
-tonsil
-rectum
-duodenum
-colon
-liver
-kidney
-fallopian tube
-lymph node
-oral mucosa
-seminal vesicle
-salivary gland
-vagina
-breast
-thyroid gland
-skeletal muscle
-soft tissue 1
-soft tissue 2
-esophagus
-bronchus
-endometrium 1
-endometrium 2
-bone marrow
-adrenal gland
-heart muscle
-smooth muscle
-skin 2
-skin 1
-nasopharynx
-cervix, uterine
-spleen
-cerebral cortex
-hippocampus
-caudate
-cerebellum
+appendix  
+pancreas  
+lung  
+prostate  
+epididymis  
+placenta  
+parathyroid gland  
+stomach 1  
+stomach 2  
+small intestine  
+gallbladder  
+urinary bladder  
+testis  
+ovary  
+tonsil  
+rectum  
+duodenum  
+colon  
+liver  
+kidney  
+fallopian tube  
+lymph node  
+oral mucosa  
+seminal vesicle  
+salivary gland  
+vagina  
+breast  
+thyroid gland  
+skeletal muscle  
+soft tissue 1  
+soft tissue 2  
+esophagus  
+bronchus  
+endometrium 1  
+endometrium 2  
+bone marrow  
+adrenal gland  
+heart muscle  
+smooth muscle  
+skin 2  
+skin 1  
+nasopharynx  
+cervix, uterine  
+spleen  
+cerebral cortex  
+hippocampus  
+caudate  
+cerebellum  
 
 
 APPENDIX B: Known cancer tissues for HPA v18
 --------------
-testis cancer
-urothelial cancer
-renal cancer
-stomach cancer
-pancreatic cancer
-liver cancer
-colorectal cancer
-breast cancer
-prostate cancer
-ovarian cancer
-cervical cancer
-endometrial cancer
-carcinoid
-head and neck cancer
-thyroid cancer
-glioma
-lymphoma
-lung cancer
-melanoma
-skin cancer
+testis cancer  
+urothelial cancer  
+renal cancer  
+stomach cancer  
+pancreatic cancer  
+liver cancer  
+colorectal cancer  
+breast cancer  
+prostate cancer  
+ovarian cancer  
+cervical cancer  
+endometrial cancer  
+carcinoid  
+head and neck cancer  
+thyroid cancer  
+glioma  
+lymphoma  
+lung cancer  
+melanoma  
+skin cancer  
