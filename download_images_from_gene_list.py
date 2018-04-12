@@ -43,6 +43,7 @@ __email__ = "tcornish@gmail.com"
 import logging
 import urllib.request, urllib.error, urllib.parse
 import csv
+import time
 import sys
 import os
 import re
@@ -57,11 +58,12 @@ from multiprocessing.dummy import Pool as ThreadPool
 from api_client import get_tissues, get_genes, get_images
 
 #configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
 
 # create a file handler
-handler = logging.FileHandler('download_images.log')
+log_file = 'download_images.log'
+handler = logging.FileHandler(log_file)
 handler.setLevel(logging.INFO)
 
 # create a logging format
@@ -71,8 +73,8 @@ handler.setFormatter(formatter)
 # add the handlers to the logger
 logger.addHandler(handler)
 
+
 def main(infile,outfile,tissue,outdir,create,skip,numWorkers):
-	logFile = os.path.join(outDir,'log.txt')
 
 	fieldnames = ['image_file','ensg_id','tissue_or_cancer','antibody','protein_url','image_url']
 
@@ -89,7 +91,7 @@ def main(infile,outfile,tissue,outdir,create,skip,numWorkers):
 			gene = gene.strip()
 			if gene in skip:
 				skipList.append(gene)
-				print('Skipping %s ...' % gene)
+				logger.info('Skipping %s' % gene)
 			else:
 				geneList.append(gene)
 
@@ -100,38 +102,53 @@ def main(infile,outfile,tissue,outdir,create,skip,numWorkers):
 	print('Creating a pool of %s workers.\n' % numWorkers)
 	pool = ThreadPool(numWorkers)
 
-	#create shared queues to handle writing to our output and log files
+	#create shared queue to handle writing to our output FILE
 	manager = mp.Manager()
 	outQ = manager.Queue()
-	logQ = manager.Queue()
 
 	#use a shared variable to keep a count of errors
 	errorCount = manager.Value('i',0)
 
-	print('Getting image list...')
+	logger.info('Getting image list...')
 	images = get_images(geneList,[tissue,])
 	print('  done.')
-	print('Found a total of %s images' % len(images))
+	logger.info('Found a total of %s images on HPA' % len(images))
+
+	#find duplicate images
+	duplicate_images = [x ['image_file'] for x in images if os.path.exists(os.path.join(outdir,x['image_file']))]
+
+	#if any of the images already exist in the outdir, query if we should overwrite 
+	if duplicate_images:
+		logger.info('%s images with duplicate names found in output directory "%s".',len(duplicate_images),outdir)
+		overwrite_images = query_yes_no('Duplicate images found. Overwrite images?',default="no")
+		if overwrite_images:
+			logger.info('Will overwrite %s duplicate images.' % len(duplicate_images))
+		else:
+			logger.info('Will skip %s duplicate images.' % len(duplicate_images))
+	else:
+		overwrite_images = True
+
+	# remove duplicate_images from list of images
+	if not overwrite_images:
+		images = [x for x in images if x['image_file'] not in duplicate_images]
+	logger.info('Queuing %s images for download' % len(images))
 
 	#zip together the data into an array of tuples so that we can use a map function
-	data = list(zip(images,repeat(outdir),repeat(outQ),repeat(logQ),repeat(errorCount)))
-	#print data
+	data = list(zip(images,repeat(outdir),repeat(outQ),repeat(errorCount)))
 
 	#start the listener threads for the file writing queues
 	pool.apply_async(resultListener, (outQ,outfile,fieldnames))
-	pool.apply_async(logListener, (logQ,logFile))
 
 	#map our data to a pool of workers, i.e. do the work
 	pool.map(worker, data)
 
 	#kill off the queue listeners and close the pool
 	outQ.put('kill')
-	logQ.put('kill','')
 	pool.close()
 
-	print("Complete.\n")
+	logger.info("Finished")
 	if errorCount.value > 0:
-		print("There were %s errors.\n\nPlease check the log file: %s" % (errorCount.value,os.path.abspath(logFile)))
+		print("There were %s errors.\n\nPlease check the log file: %s" % (errorCount.value,log_file))
 
 def resultListener(q,filepath,fieldnames):
 	'''listens for messages on the q, writes to file using a csv writer. '''
@@ -143,18 +160,9 @@ def resultListener(q,filepath,fieldnames):
 				break
 			writer.writerow(result)
 
-def logListener(q,filepath):
-	with open(filepath, "ab") as f:
-		while 1:
-			(type,message) = q.get()
-			if type == 'kill':
-				break
-			timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-			f.write('%s %s  %s\n' % (timestamp,type,message) )
-
 def worker(xxx_todo_changeme):
-	(image,outdir,outQ,logQ,errorCount) = xxx_todo_changeme
-	print('Downloading %s (%s) ...\n' % (image['image_url']
+	(image,outdir,outQ,errorCount) = xxx_todo_changeme
+	logger.info('Downloading %s (%s)' % (image['image_url']
 		,image['ensg_id']))
 	try:
 		result = {}
@@ -178,21 +186,29 @@ def worker(xxx_todo_changeme):
 	except Exception as e: # catch any errors & pass on the message
 		errorCount.value += 1
 		message = '%s %s %s' % (image['ensg_id'],image['image_url'],str(e))
-		logQ.put('ERROR',message)
-		print('Caught Exception: %s' % str(e))
-		print(traceback.format_exc())
+		logger.error('Caught Exception: %s' % str(e))
+		logger.error(traceback.format_exc())
 
 def downloadImage(imageUrl,image_name,outdir):
-	try:
-		print('    image: %s -> %s\n' % (imageUrl,image_name))
-		image_data = urllib.request.urlopen(imageUrl).read()
-		# Open output file in binary mode, write, and close.
-		imagePath = os.path.join(outdir,image_name)
-		with open(imagePath,'wb') as fout:
-			fout.write(image_data)
-	except Exception as e: # catch any errors & pass on the message
-		print('Caught Exception: %s' % str(e))
-		print(traceback.format_exc())
+	MAX_ATTEMPTS = 10
+	attempts = 0
+	while attempts < MAX_ATTEMPTS:
+		try:
+			attempts += 1
+			image_data = urllib.request.urlopen(imageUrl).read()
+			# Open output file in binary mode, write, and close.
+			imagePath = os.path.join(outdir,image_name)
+			with open(imagePath,'wb') as fout:
+				fout.write(image_data)
+			logger.info('Finished download for %s',image_name)
+			break
+		except Exception as e: # catch any errors & pass on the message
+			# write the exception only if this is the last attempt; this may not work
+			print(attempts)
+			if attempts == MAX_ATTEMPTS:
+				logger.error('Caught Exception: %s for %s',str(e),imageUrl)
+				logger.error(traceback.format_exc())
+			time.sleep(1)
 
 def writeExifUserComment(imagePath,userCommentAsDict):
 	# read in the exif data, add the user comment as json, and write it

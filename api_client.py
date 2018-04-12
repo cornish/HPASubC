@@ -39,7 +39,7 @@ def get_images(ensg_ids,tissues):
 	response = requests.post(url,json=payload)
 	images = []
 	if(response.ok):
-		print(response.content)
+		#print(response.content)
 		json_data = json.loads(response.content)
 		images = [x for x in json_data['data']]
 	else:
