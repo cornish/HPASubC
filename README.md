@@ -1,4 +1,4 @@
-HPASubC, v1.2.4 03/31/2018
+HPASubC, v1.2.x 04/19/2018
 ==============
 The Human Protein Atlas (HPA) Subcellular Classification (SubC) software package is a collection of python scripts by Marc Halushka at Johns Hopkins University and Toby C. Cornish at the University of Colorado. This suite of scripts has not been made in conjunction with the HPA, thus the HPA is in no way responsible for any data obtained through these methods. No warranties are given or implied.
 
@@ -24,8 +24,9 @@ Gnu Public License v3, see text of the full license in project.
 Script files:
 --------------
 1. download_images_from_gene_list.py
-2. image_viewer.py
-3. image_scorer.py
+2. get_all_genes_as_list.py
+3. image_viewer.py
+4. image_scorer.py
 
 
 Dependencies:
@@ -78,6 +79,28 @@ ENSG00000000419
 **output_dir**: A folder to contain the downloaded JPEG images.  It will be created if it does not exist.
 
 **workers**: The number of threads to use for downloading images. Optional. Defaults to 3. For large downloads, 50 might be more appropriate.  Please avoid using an excessive number of workers (100 or more).
+
+
+get_all_genes_as_list.py
+--------------
+### Usage:
+
+`get_all_genes_as_list.py`
+
+This is a convenience script that will retrieve all the ENSG IDs that are in the HPA and save them to a text file named "all_ensg_ids.txt"  The file is suitable for use as input for the image download script above.
+
+### Parameters:
+
+None  
+
+**output_file**: A text file with a single column of ENSG IDs
+
+ENSG00000134490  
+ENSG00000108854  
+ENSG00000101558  
+...
+ENSG00000257923  
+
 
 image_viewer.py
 --------------
