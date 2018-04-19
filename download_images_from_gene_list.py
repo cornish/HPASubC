@@ -78,11 +78,20 @@ def main(infile,outfile,tissue,outdir,create,skip,numWorkers):
 
 	fieldnames = ['image_file','ensg_id','tissue_or_cancer','antibody','protein_url','image_url']
 
-	with open(outfile, "a") as f: #create or append .csv output file to write to here
-		writer = csv.DictWriter(f, dialect='excel',fieldnames=fieldnames)
-		#add the header if this is a new file
-		if create:
-			writer.writerow(dict((fn,fn) for fn in fieldnames))
+	if os.path.exists(outfile):
+		mode = 'a' # append if already exists
+	else:
+		mode = 'w' # make a new file if not
+	
+	# there are some 2 v. 3 differences here to avoid extra blank lines
+	if (sys.version_info > (3, 0)):	
+		f = open(outfile,mode,newline='\n')
+	else:
+		f = open(outfile,mode+'b')
+	writer = csv.DictWriter(f, dialect='excel',fieldnames=fieldnames,extrasaction='ignore')
+	if mode == 'w':
+		writer.writeheader()
+	f.close()
 
 	geneList = []
 	skipList = []
@@ -152,13 +161,21 @@ def main(infile,outfile,tissue,outdir,create,skip,numWorkers):
 
 def resultListener(q,filepath,fieldnames):
 	'''listens for messages on the q, writes to file using a csv writer. '''
-	with open(filepath, "ab") as f: #create or append .csv output file to write to here
-		writer = csv.DictWriter(f, dialect='excel',fieldnames=fieldnames)
-		while 1:
-			result = q.get()
-			if result == 'kill':
-				break
-			writer.writerow(result)
+
+	# there are some 2 v. 3 differences here to avoid extra blank lines
+	mode = 'a'
+	if (sys.version_info > (3, 0)):	
+		f = open(filepath,mode,newline='\n')
+	else:
+		f = open(filepath,mode+'b')
+	writer = csv.DictWriter(f, dialect='excel',fieldnames=fieldnames,extrasaction='ignore')
+	while 1:
+		result = q.get()
+		if result == 'kill':
+			break
+		writer.writerow(result)
+	f.close()
+
 
 def worker(xxx_todo_changeme):
 	(image,outdir,outQ,errorCount) = xxx_todo_changeme
@@ -342,14 +359,10 @@ if __name__ == '__main__':
 				os.remove(outFile)
 				create = True
 			else:
-				resume = query_yes_no('Try to resume?',default="yes")
-				if resume:
-					skip = readProgress(outFile)
-				else:
-					append = query_yes_no('Append the file (or n to quit)?',default="yes")
-					if not append:
-						print('ok. exiting...')
-						sys.exit()
+				append = query_yes_no('Append the file (or n to quit)?',default="yes")
+				if not append:
+					print('ok. exiting...')
+					sys.exit()
 
 		#logger.info(inFile,outFile,tissue,outDir,create,skip,numWorkers)
 		logger.info(inFile)
