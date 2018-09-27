@@ -240,8 +240,8 @@ def readExifUserComment(imagePath):
 								}
 	try:
 		exif_dict = piexif.load(imagePath)
-		#fix exiv encoding issue if found
-		if '\x00\x00\x00\x00\x00\x00\x00\x00' in exif_dict['Exif'][37510]:
+		#fix exiv encoding issue if found; for python 2 only
+		if sys.version_info[0] == 2 and '\x00\x00\x00\x00\x00\x00\x00\x00' in exif_dict['Exif'][37510]:
 			s = exif_dict['Exif'][37510].replace('\x00\x00\x00\x00\x00\x00\x00\x00','')
 			userComment = json.loads(s)
 		else:
