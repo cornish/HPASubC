@@ -11,7 +11,7 @@ Cornish TC, Chakravarti A, Kapoor A, Halushka MK. HPASubC: A suite of tools for 
 
 Development Roadmap:
 --------------
-The 1.2.x release of HPASubC is essentially a patch/partial re-write of the existing project that has removed HPASubC's dependency on screen scraping the HPA website. Image metadata is now sourced via a RESTful API that serves a copy of the HPA data from a private server. This version is compatible with HPA v18 and should continue to work even when v19 is released. Version 1.2.4 and up should support both python 2.7 and python 3.
+The 1.2.x release of HPASubC was essentially a patch/partial re-write of the existing project that has removed HPASubC's dependency on screen scraping the HPA website. Image metadata is now sourced via a RESTful API that serves a copy of the HPA data from a private server. This version is compatible with HPA v18 and should continue to work even when v19 is released. Version 1.2.4 and up should support both python 2.7 and python 3.
 
 The long term plan for HPASubC is integrate a GUI frontend into the project (version 2) and to maintain compatibility with updates to the HPA project.
 
@@ -55,7 +55,7 @@ download_images_from_gene_list.py
 --------------
 ### Usage:
 
-`download_images_from_gene_list.py input_file output_file tissue output_dir [workers]`
+`download_images_from_gene_list.py input_file output_file tissue output_dir [-v hpa_version] [-w workers]`
 
 For a list of gene ids and a tissue type, this script will get the list of images and image metadata for HPA images, download the full-sized HPA images, and output a file listing information about the retrieved images.  This file requires a .txt input file of ENSG IDs and outputs a .csv file. HPA ENSG IDs can be obtained here: http://www.proteinatlas.org/about/download. Large downloads can take a LONG time.
 
@@ -67,6 +67,7 @@ ENSG00000000005
 ENSG00000000419  
 
 **output_file**: A CSV file with 6 columns:
+- version: HPA version 
 - image_file: the name of the image file downloaded
 - ensg_id: the Ensembl gene id
 - tissue: the tissue represented in the image
@@ -74,9 +75,11 @@ ENSG00000000419
 - protein_url: the HPA url for the ensg_id
 - image_url: the HPA url the image was downloaded from
 
-**tissue**: A valid tissue type recognized by the HPA website. A list of known tissue types are given in Appendix A (for normals) and Appendix B (for cancers) of this file. If there are spaces in the tissue name, enclose the whole name in double quotes, for example: "Heart muscle".  Capitalization is not necessary.
+**tissue**: A valid tissue type recognized by the HPA website. A list of known tissue types are given in Appendix A (for normals) and Appendix B (for cancers) of this file. If there are spaces in the tissue name, enclose the whole name in double quotes, for example: "Heart muscle".
 
 **output_dir**: A folder to contain the downloaded JPEG images.  It will be created if it does not exist.
+
+**hpa_version**: Either 18 or 19, defaults to 19.
 
 **workers**: The number of threads to use for downloading images. Optional. Defaults to 3. For large downloads, 50 might be more appropriate.  Please avoid using an excessive number of workers (100 or more).
 
@@ -161,77 +164,91 @@ We generally put 3,000 images in one folder and scan them in these smaller block
 - image_url: the HPA url the image was downloaded from
 
 
-APPENDIX A: Known tissues for HPA v18
+APPENDIX A: Known tissues for HPA v19
 --------------
-appendix  
-pancreas  
-lung  
-prostate  
-epididymis  
-placenta  
-parathyroid gland  
-stomach 1  
-stomach 2  
-small intestine  
-gallbladder  
-urinary bladder  
-testis  
-ovary  
-tonsil  
-rectum  
-duodenum  
-colon  
-liver  
-kidney  
-fallopian tube  
-lymph node  
-oral mucosa  
-seminal vesicle  
-salivary gland  
-vagina  
-breast  
-thyroid gland  
-skeletal muscle  
-soft tissue 1  
-soft tissue 2  
-esophagus  
-bronchus  
-endometrium 1  
-endometrium 2  
-bone marrow  
-adrenal gland  
-heart muscle  
-smooth muscle  
-skin 2  
-skin 1  
-nasopharynx  
-cervix, uterine  
-spleen  
-cerebral cortex  
-hippocampus  
-caudate  
-cerebellum  
+Adipose tissue
+Adrenal gland
+Appendix
+Bone marrow
+Breast
+Bronchus
+Caudate
+Cerebellum
+Cerebral cortex
+Cervix, uterine
+Colon
+Duodenum
+Endometrium 1
+Endometrium 2
+Epididymis
+Esophagus
+Fallopian tube
+Gallbladder
+Heart muscle
+Hippocampus
+Kidney
+Liver
+Lung
+Lymph node
+Nasopharynx
+Oral mucosa
+Ovary
+Pancreas
+Parathyroid gland
+Placenta
+Prostate
+Rectum
+Salivary gland
+Seminal vesicle
+Skeletal muscle
+Skin 1
+Skin 2
+Small intestine
+Smooth muscle
+Soft tissue 1
+Soft tissue 2
+Spleen
+Stomach 1
+Stomach 2
+Testis
+Thyroid gland
+Tonsil
+Urinary bladder
+Vagina
+Hair
+Retina
+Lactating breast
+Skin
+Cartilage
+Eye
+Thymus
+Pituitary gland
+Dorsal raphe
+Choroid plexus
+Substantia nigra
+Sole of foot
 
 
-APPENDIX B: Known cancer tissues for HPA v18
+APPENDIX B: Known cancer tissues for HPA v19
 --------------
-testis cancer  
-urothelial cancer  
-renal cancer  
-stomach cancer  
-pancreatic cancer  
-liver cancer  
-colorectal cancer  
-breast cancer  
-prostate cancer  
-ovarian cancer  
-cervical cancer  
-endometrial cancer  
-carcinoid  
-head and neck cancer  
-thyroid cancer  
-glioma  
-lymphoma  
-lung cancer  
-melanoma  
-skin cancer  
+Breast cancer
+Carcinoid
+Cervical cancer
+Colorectal cancer
+Endometrial cancer
+Glioma
+Head and neck cancer
+Liver cancer
+Lung cancer
+Lymphoma
+Melanoma
+Ovarian cancer
+Pancreatic cancer
+Prostate cancer
+Renal cancer
+Skin cancer
+Stomach cancer
+Testis cancer
+Thyroid cancer
+Urothelial cancer
+Hypothalamus

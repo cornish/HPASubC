@@ -2,6 +2,7 @@
 
 """download_images_from_gene_list_multi.py: given a file of Ensembl gene ids, a valid tissue, and an output directory will download the full size images for that gene id, and create a CSV file with columns containing the following data from HPA:
 
+	version: the HPA version
 	image_file: the name of the image file downloaded
 	ensg_id: the Ensembl gene id
 	tissue_or_cancer: the tissue_or_cancer represented in the image
@@ -14,7 +15,9 @@ Known tissue (and cancer) types are listed in the APPENDICES of the README file
 
 This script also embeds the above information as json in the Exif.UserComment tag in each downloaded image. This Exif data is used by the subsequent software (viewer, scorer) to associate the image file with the ensg_id, antibody, etc.
 
-usage: download_images_from_gene_list_multi.py <input_file> <output_file> <tissue> <output_dir> [workers]
+Currently supported hpa_versions are 18 and 19; if omitted, it defaults to 19
+
+usage: download_images_from_gene_list_multi.py <input_file> <output_file> <tissue> <output_dir> [-v hpa_version] [-w workers]
 """
 from __future__ import print_function
 from __future__ import division
@@ -25,6 +28,8 @@ from __future__ import absolute_import
 # 11-09-2014 TC swapped in multithreading for multiprocessing
 # 04-30-2015 TC corrected error in arg parsing
 # 12-19-2017 TC rewrote to source image url data from hpasubc REST api
+# 08-26-2020 TC rewrote to address work with the api_client that now targets multiple versions of HPA
+# 08-26-2020 TC changed argument parsing to use argparse  
 
 from future import standard_library
 standard_library.install_aliases()
@@ -33,10 +38,10 @@ from builtins import input
 from builtins import str
 
 __author__ = "Marc Halushka, Toby Cornish"
-__copyright__ = "Copyright 2014-2017, Johns Hopkins University"
+__copyright__ = "Copyright 2014-2020"
 __credits__ = ["Marc Halushka", "Toby Cornish"]
 __license__ = "GPL"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Toby C. Cornish"
 __email__ = "tcornish@gmail.com"
 
@@ -46,6 +51,7 @@ import csv
 import time
 import sys
 import os
+import argparse
 import re
 import datetime
 import traceback
@@ -73,10 +79,11 @@ handler.setFormatter(formatter)
 # add the handlers to the logger
 logger.addHandler(handler)
 
+valid_hpa_versions = [18,19] #restricts valid commandline arguments
 
-def main(infile,outfile,tissue,outdir,create,skip,numWorkers):
+def main(hpa_version,infile,outfile,tissue,outdir,create,skip,numWorkers):
 
-	fieldnames = ['image_file','ensg_id','tissue_or_cancer','antibody','protein_url','image_url']
+	fieldnames = ['hpa_version','image_file','ensg_id','tissue_or_cancer','antibody','protein_url','image_url']
 
 	if os.path.exists(outfile):
 		mode = 'a' # append if already exists
@@ -119,7 +126,7 @@ def main(infile,outfile,tissue,outdir,create,skip,numWorkers):
 	errorCount = manager.Value('i',0)
 
 	logger.info('Getting image list...')
-	images = get_images(geneList,[tissue,])
+	images = get_images(hpa_version,geneList,[tissue,])
 	print('  done.')
 	logger.info('Found a total of %s images on HPA' % len(images))
 
@@ -183,6 +190,7 @@ def worker(xxx_todo_changeme):
 		,image['ensg_id']))
 	try:
 		result = {}
+		result['hpa_version'] = image['version']
 		result['ensg_id'] = image['ensg_id']
 		result['tissue_or_cancer'] = image['tissue_or_cancer']
 		result['protein_url'] = 'deprecated'
@@ -294,10 +302,10 @@ def query_yes_no(question, default="yes"):
 		except KeyboardInterrupt: #handle a ctrl-c
 			sys.exit()
 
-def get_valid_tissues():
-	tissues_file = 'valid_tissues.txt'
+def get_valid_tissues(hpa_version):
+	tissues_file = 'valid_tissues_v%s.txt' % (hpa_version,)
 	if not os.path.isfile(tissues_file):
-		tissues = get_tissues()
+		tissues = get_tissues(hpa_version)
 		with open(tissues_file,'w') as f:
 			for tissue in tissues:
 				f.write(tissue+'\n')
@@ -308,62 +316,68 @@ def get_valid_tissues():
 			lines = f.readlines()
 		return [l.strip() for l in lines] 
 
+def parse_args():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('in_file', help='Text file with Ensembl gene ids', type=str)
+	parser.add_argument('out_file', help='CSV file for results', type=str)
+	parser.add_argument('tissue', help='Tissue of interest', type=str)
+	parser.add_argument('out_dir', help='Output directory for writing images', type=str)
+	parser.add_argument("-v", "--hpa_version", help='HPA version, valid options are 18 or 19',
+						type=int, choices=valid_hpa_versions, default=max(valid_hpa_versions))
+	parser.add_argument("-w", "--workers", help='Number of workers to use, defaults to 3',
+						type=int, default=3)
+	return parser.parse_args()
 
 if __name__ == '__main__':
-	if len(sys.argv) < 5 or len(sys.argv) > 6:
-		print('\nIncorrect number of arguments!\n\n')
-		print('usage: %s <input_file> <output_file> <tissue> <output_dir> [workers]' % os.path.basename(sys.argv[0]))
+	args = parse_args()
+
+	# for convenience, copy these out of args
+	tissue = args.tissue
+	in_file = args.in_file
+	out_file = args.out_file
+	out_dir = args.out_dir
+	workers = args.workers
+	hpa_version = args.hpa_version
+
+	tissues = get_valid_tissues(hpa_version)
+
+	if tissue not in tissues:
+		print('The tissue %s is not a valid option.' % tissue)
+		print('Valid tissues are: %s' % ', '.join(tissues))
 		sys.exit()
-	else:
-		inFile = sys.argv[1]
-		outFile = sys.argv[2]
-		tissue = sys.argv[3]
-		outDir = sys.argv[4]
-		if len(sys.argv) == 6 and int(sys.argv[5]) > 3:
-			numWorkers = int(sys.argv[5])
+
+	if not os.path.isfile(in_file):
+		print('The input file %s does not exist.' % in_file)
+		sys.exit()
+
+	try:
+		if not os.path.exists(out_dir):
+			# make the directory if it doesn't exist
+			os.makedirs(out_dir)
+	except Exception as e: #catch error making directory
+		print(e)
+		print('Error creating directory %s' % out_dir)
+		sys.exit()
+
+	if not fileIsWriteable(out_file):
+		print('The output file %s is not writable -- is it open?' % out_file)
+		sys.exit()
+
+	create = True
+	skip = []
+	if os.path.exists(out_file):
+		create = False
+		print('The output file %s exists.' % out_file)
+		overwrite = query_yes_no('Overwrite?',default="no")
+		if overwrite:
+			os.remove(out_file)
+			create = True
 		else:
-			# no number of workers provided or number < 3, so use default minimum
-			numWorkers = 3
+			append = query_yes_no('Append the file (or n to quit)?',default="yes")
+			if not append:
+				print('ok. exiting...')
+				sys.exit()
 
-		tissues = get_valid_tissues()
-
-		if tissue.lower() not in tissues:
-			print('The tissue %s is not a valid option.' % tissue)
-			print('Valid tissues are: %s' % ', '.join(tissues))
-			sys.exit()
-
-		if not os.path.isfile(inFile):
-			print('The input file %s does not exist.' % inFile)
-			sys.exit()
-
-		try:
-			if not os.path.exists(outDir):
-				# make the directory if it doesn't exist
-				os.makedirs(outDir)
-		except Exception as e: #catch error making directory
-			print(e)
-			print('Error creating directory %s' % outDir)
-			sys.exit()
-
-		if not fileIsWriteable(outFile):
-			print('The output file %s is not writable -- is it open?' % outFile)
-			sys.exit()
-
-		create = True
-		skip = []
-		if os.path.exists(outFile):
-			create = False
-			print('The output file %s exists.' % outFile)
-			overwrite = query_yes_no('Overwrite?',default="no")
-			if overwrite:
-				os.remove(outFile)
-				create = True
-			else:
-				append = query_yes_no('Append the file (or n to quit)?',default="yes")
-				if not append:
-					print('ok. exiting...')
-					sys.exit()
-
-		#logger.info(inFile,outFile,tissue,outDir,create,skip,numWorkers)
-		logger.info(inFile)
-		main(inFile,outFile,tissue,outDir,create,skip,numWorkers)
+	#logger.info(hpa_version,in_file,out_file,tissue,out_dir,create,skip,workers)
+	logger.info(in_file)
+	main(hpa_version,in_file,out_file,tissue,out_dir,create,skip,workers)
