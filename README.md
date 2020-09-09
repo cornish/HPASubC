@@ -11,10 +11,9 @@ Cornish TC, Chakravarti A, Kapoor A, Halushka MK. HPASubC: A suite of tools for 
 
 Development Roadmap:
 --------------
-The 1.2.x release of HPASubC was essentially a patch/partial re-write of the existing project that has removed HPASubC's dependency on screen scraping the HPA website. Image metadata is now sourced via a RESTful API that serves a copy of the HPA data from a private server. This version is compatible with HPA v18 and should continue to work even when v19 is released. Version 1.2.4 and up should support both python 2.7 and python 3.
+The 1.2.x release of HPASubC was essentially a patch/partial re-write of the existing project that has removed HPASubC's dependency on screen scraping the HPA website. Image metadata is now sourced via a RESTful API that serves a copy of the HPA data from a private server. This version is compatible with *both* HPA v18 and v19 and has been modifed to adapt to new versions. Version 1.2.4 and support both python 2.7 and python 3.x
 
-The long term plan for HPASubC is integrate a GUI frontend into the project (version 2) and to maintain compatibility with updates to the HPA project.
-
+The long term plan for HPASubC is integrate a GUI frontend into the project (version 2) and to maintain compatibility with updates to the HPA project. I also noted recently that the HPA website now exposes an API to access HPA data directly. Eventually the project may migrate back to sourcing data directly from the HPA website via the HPA rather than from our server.
 
 License:
 --------------
